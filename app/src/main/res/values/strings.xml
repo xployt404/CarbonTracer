@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">CarbonTracer</string>
+    <string name="api_key">AIzaSyBNzzQPdZ_PXjvrQOnwQIDZJWtrG1cFXME</string>
+    <string name="welcome_introduction">
+    Global Warming is a challenge that will haunt us probably <b>until this century is over</b>.\nCenturies is also the time politics takes to make notable changes.\nThat is why <b>the first step towards change starts with us.</b>\nTaking that step requires a <b>simple and fast assessment of your carbon footprint</b>.\nSo go ahead and <b>trace your carbons!</b>
+</string>
+    <string name="tutorial_intro">
+    Carbon Tracer consists of four elements: <b>the chat, camera, Tracer, and a statistics page.</b>\n\n
+    <b>1. Chat:</b> Talk to the Tracer AI via text or voice messages.\n
+    <b>2. Camera:</b> Photograph objects you want add tot the tracer.\n
+    <b>3. Tracer:</b> A list of all Traceables.\n
+    <b>4. Statistics:</b> Distribution of your carbon footprint and top emitters.
+</string>
+    <string name="add_traceable_text">
+    Adding new Traceables to the Tracer can be done in 2 ways:\n
+    <b>1. Take a photo:</b> You can take a photo of an item in the Camera Tab. The AI will detect it, and you can add info to assess the CO2 emissions.\n
+    <b>2. Manually add:</b> You can manually add the traceable by pressing the plus sign at the top of the Tracer.\nTo <b>remove</b> the traceables, select them and press the trash bin icon.
+</string>
+    <string name="what_is_tracer_text">
+    <b>The Tracer</b> is the heart of this app.\nIt is a list of all the objects, activities, etc. that the user added to assess their CO2 emissions.\nThey are referred to as <b>Traceables</b>.
+</string>
+
+    <string-array name="occurence_array">
+        <item>daily</item>
+        <item>weekly</item>
+        <item>monthly</item>
+        <item>yearly</item>
+    </string-array>
+
+</resources>

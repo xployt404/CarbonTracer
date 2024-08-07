@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="typingDotDiameter">12dp</dimen>
+    <dimen name="dotMargin">20dp</dimen>
+    <dimen name="tab_item_icon_size">70dp</dimen>
+</resources>

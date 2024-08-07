@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape android:shape="rectangle"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/tracer_background" />
+    <gradient
+        android:startColor="#25FFFFFF"
+    android:endColor="#000000"
+    android:angle="90"
+    android:centerX="0.5"
+    android:centerY="0.0"
+    android:gradientRadius="1.0"
+    android:tileMode="clamp" />
+</shape>

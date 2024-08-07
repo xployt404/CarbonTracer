@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Top Gradient Layer -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#115314"
+                android:endColor="#33691E"
+                android:angle="90" />          <!-- Vertical gradient -->
+        </shape>
+    </item>
+
+    <!-- Bottom Gradient Layer -->
+    <item > <!-- Adjust this value to control the gradient height -->
+        <shape android:shape="rectangle" >
+            <gradient
+                android:startColor="#5DA261"
+                android:angle="90" />           <!-- Vertical gradient -->
+        </shape>
+    </item>
+
+</layer-list>

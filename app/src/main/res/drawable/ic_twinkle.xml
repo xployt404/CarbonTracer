@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:top="20dp" android:left="5dp"
+        android:height="14dp" android:width="14dp"
+        android:drawable="@drawable/ic_star"/>
+
+    <item android:top="10dp" android:left="15dp"
+        android:height="16dp" android:width="16dp"
+        android:drawable="@drawable/ic_star">
+
+    </item>
+
+    <item android:top="0dp" android:right="10dp"
+        android:height="18dp" android:width="18dp"
+        android:drawable="@drawable/ic_star"/>
+
+
+</layer-list>
