@@ -74,7 +74,7 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/messageEditTextFrame"
+        app:layout_constraintBottom_toTopOf="@+id/typingIndicatorCardView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -89,7 +89,7 @@
 
         app:layout_constraintTop_toBottomOf="@id/chatHistory"
         app:layout_constraintBottom_toTopOf="@+id/messageEditTextFrame"
-        app:layout_constraintLeft_toLeftOf="@+id/chat_fragment">
+        app:layout_constraintLeft_toLeftOf="@id/chatHistory">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

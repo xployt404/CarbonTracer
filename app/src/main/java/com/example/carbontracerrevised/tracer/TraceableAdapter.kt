@@ -1,10 +1,14 @@
 package com.example.carbontracerrevised.tracer
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.transition.AutoTransition
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +22,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.transition.doOnStart
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.GeminiModel
@@ -72,6 +77,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     when(holder.expanded) {
                         false -> {
                             Log.d(TAG, "onBindViewHolder: not expanded")
+                            holder.header.setBackgroundResource(R.drawable.dialog_title_background)
                             currentExpandedTraceable?.body?.visibility = View.GONE
                             currentExpandedTraceable?.expanded = false
                             holder.expandView(holder.body)
@@ -158,8 +164,16 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             // Use lifecycleScope to ensure proper lifecycle management
             holder.progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
-                val response = convertToKg(removeUnwantedChars(model.Tracer().generateCo2e(activity.applicationContext, item)))
+
+                val response = withContext(Dispatchers.IO) {
+                    convertToKg(
+                        removeUnwantedChars(
+                            model.Tracer().generateCo2e(activity.applicationContext, item)
+                        )
+                    )
+                }
                 item.co2e = response
+
 
                 // Switch back to the main thread for UI updates
                 withContext(Dispatchers.Main) {
@@ -229,7 +243,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
          val progressBar: ProgressBar
 
 
-        internal var editTextList : MutableList<View>
+        internal var editTextList : MutableList<EditText>
         init {
              header = view.findViewById(R.id.traceableHeaderLayout)
              body = view.findViewById(R.id.tracerExpandedPart)
@@ -278,53 +292,44 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             }
         }
 
+
+
         internal fun expandView(view: View) {
-            Log.d(TAG, "expandView: expanding")
+            val transition = AutoTransition()
+            transition.doOnStart {
+                // EditText have an error which makes the text invisible when the traceable is expanded again.
+                // Resetting the text inside fixes the issue
+                for (editText in editTextList){
+                    editText.text = editText.text
+                }
+            }
+            view.layoutParams.height = 0
             view.visibility = View.VISIBLE
+            transition.duration = 200 // Set the duration of the animation in milliseconds
+            TransitionManager.beginDelayedTransition(view.parent as ViewGroup, transition)
             expanded = true
         }
 
-//        internal fun expandView(view: View) {
-//            val transition = AutoTransition()
-//            transition.doOnStart {
-//                // EditText have an error which makes the text invisible when the traceable is expanded again.
-//                // Resetting the text inside fixes the issue
-//                for (editText in editTextList){
-//                    editText.text = editText.text
-//                }
-//            }
-//            view.layoutParams.height = 0
-//            view.visibility = View.VISIBLE
-//            transition.duration = 200 // Set the duration of the animation in milliseconds
-//            TransitionManager.beginDelayedTransition(view.parent as ViewGroup, transition)
-//
-//        }
-
-
         internal fun collapseView(view: View) {
-            Log.d(TAG, "collapseView: collapsing")
-            view.visibility = View.GONE
+            val initialHeight = view.height
+
+            val animator = ValueAnimator.ofInt(initialHeight, 0)
+            animator.addUpdateListener { animation ->
+                val animatedValue = animation.animatedValue as Int
+                val layoutParams = view.layoutParams
+                layoutParams.height = animatedValue
+                view.layoutParams = layoutParams
+            }
+            animator.addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    view.visibility = View.GONE // Hide the view after the animation ends
+                    this@TraceableViewHolder.header.setBackgroundResource(R.drawable.edit_text_background)
+                }
+            })
+            animator.duration = 200 // Set the duration of the animation in milliseconds
+            animator.start() // Start the animation
             expanded = false
         }
-//        internal fun collapseView(view: View) {
-//            val initialHeight = view.height
-//
-//            val animator = ValueAnimator.ofInt(initialHeight, 0)
-//            animator.addUpdateListener { animation ->
-//                val animatedValue = animation.animatedValue as Int
-//                val layoutParams = view.layoutParams
-//                layoutParams.height = animatedValue
-//                view.layoutParams = layoutParams
-//            }
-//            animator.addListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator) {
-//                    view.visibility = View.GONE // Hide the view after the animation ends
-//                }
-//            })
-//            animator.duration = 200 // Set the duration of the animation in milliseconds
-//            animator.start() // Start the animation
-//            expanded = false
-//        }
     }
 
     override fun getItemCount() = traceableList.size
