@@ -87,6 +87,7 @@ class TracerFragment(private val traceableAdapter: TraceableAdapter) : Fragment(
                 }
             }else{
                 (activity as MainActivity).showAddTraceableDialog(Traceable.newEmptyTraceable())
+
             }
 
             traceableAdapter.toggleSelectMode()

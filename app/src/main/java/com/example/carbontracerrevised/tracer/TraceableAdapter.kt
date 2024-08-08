@@ -19,6 +19,7 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TableLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -38,7 +39,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
     private lateinit var traceableListObject: TraceableList
     var selectModeEnabled = false
     val selectedItems = mutableListOf<Traceable>()
-    private val model = GeminiModel()
+    val model = GeminiModel()
     private var currentExpandedTraceable : TraceableViewHolder? = null
     lateinit var optionsAndClearBtn : ImageButton
     lateinit var addAndUnselectBtn : ImageButton
@@ -80,6 +81,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                             holder.header.setBackgroundResource(R.drawable.dialog_title_background)
                             currentExpandedTraceable?.body?.visibility = View.GONE
                             currentExpandedTraceable?.expanded = false
+                            currentExpandedTraceable?.header?.setBackgroundResource(R.drawable.edit_text_background)
                             holder.expandView(holder.body)
                             currentExpandedTraceable = holder
                         }
@@ -165,21 +167,27 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             holder.progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
 
-                val response = withContext(Dispatchers.IO) {
-                    convertToKg(
-                        removeUnwantedChars(
-                            model.Tracer().generateCo2e(activity.applicationContext, item)
+                try {
+                    val response = withContext(Dispatchers.IO) {
+                        val response = convertToKg(
+                            removeUnwantedChars(
+                                model.Tracer().generateCo2e(activity.applicationContext, item)
+                            )
                         )
-                    )
-                }
-                item.co2e = response
+                        item.co2e = response
+                        traceableListObject.updateTraceable(item)
+                        return@withContext response
+                    }
 
+                    withContext(Dispatchers.Main) {
+                        holder.co2eEditText.setText(response)}
+                }catch (e:Exception){
+                    Toast.makeText(activity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                }finally {
+                    withContext(Dispatchers.Main){
+                        holder.progressBar.visibility = View.INVISIBLE
 
-                // Switch back to the main thread for UI updates
-                withContext(Dispatchers.Main) {
-                    holder.co2eEditText.setText(response)
-                    holder.progressBar.visibility = View.INVISIBLE
-                    traceableListObject.updateTraceable(item)
+                    }
                 }
             }
         }
@@ -189,7 +197,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
 
 
-    private fun convertToKg(str : String) : String{
+    fun convertToKg(str : String) : String{
         val unit = str.replace(Regex("\\s+"), "").takeLast(2)
         return if ( unit == "kg"){ // unit is kilograms
             str
@@ -338,7 +346,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         return position
     }
 
-    private fun removeUnwantedChars(input: String): String {
+    fun removeUnwantedChars(input: String): String {
         // Define the regex pattern to match any character that is not a digit, decimal point, or comma
         val regex = Regex("[^a-zA-Z0-9.,\\s]+")
         val result = input.replace(regex, "").replace("CO2e", "")

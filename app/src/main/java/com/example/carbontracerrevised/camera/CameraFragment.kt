@@ -46,7 +46,6 @@ import java.util.concurrent.Executors
 class CameraFragment : Fragment() {
     private lateinit var captureBtn: ImageButton
     private lateinit var objectInfo: String
-    private lateinit var objectNameTextView: TextView
     private lateinit var previewView: PreviewView
     private lateinit var imageView: ImageView
     private lateinit var cameraExecutor: ExecutorService
@@ -71,14 +70,12 @@ class CameraFragment : Fragment() {
         previewView = cameraView.findViewById(R.id.previewView)
         imageView = cameraView.findViewById(R.id.imageView)
         progressBar = cameraView.findViewById(R.id.progressBar)
-        objectNameTextView = cameraView.findViewById(R.id.interpretedObject)
         captureBtn = cameraView.findViewById(R.id.captureButton)
         val flashBtn = cameraView.findViewById<ImageButton>(R.id.flashButton)
 
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        showAfterGenerating = listOf( objectNameTextView)
 
         model = GeminiModel()
 
@@ -179,12 +176,14 @@ class CameraFragment : Fragment() {
                                             model.Tracer()
                                             .interpretImage(requireContext(), listOf(bitmap))
                                     }
-                                        objectNameTextView.text = objectInfo
 
                                     val chunkedResponse = createTraceableFromGeminiResponse(
                                         objectInfo
                                     )
-                                    (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
+                                    val dialog = (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
+                                    dialog.setOnDismissListener {
+                                        captureBtn.performClick()
+                                    }
 
                                 }
                             }

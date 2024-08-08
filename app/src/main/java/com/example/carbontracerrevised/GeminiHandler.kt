@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
 import kotlin.coroutines.CoroutineContext
@@ -304,9 +305,11 @@ class GeminiModel : CoroutineScope{
 
                 text("output:" )
             }
-            val response = model.generateContent(
-                content
-            )
+            val response = withContext(Dispatchers.IO){
+                 model.generateContent(
+                    content
+                )
+            }
 
 
             // Get the first text part of the first candidate

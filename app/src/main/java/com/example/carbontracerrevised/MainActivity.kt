@@ -1,7 +1,9 @@
 package com.example.carbontracerrevised
 
 import android.app.Dialog
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
@@ -9,10 +11,12 @@ import android.os.StrictMode.VmPolicy
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -63,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         traceableListObject = TraceableList.getInstance(this)
         setContentView(R.layout.activity_main)
+        //TODO: Remove
          StrictMode.setThreadPolicy(
                 ThreadPolicy.Builder()
                     .penaltyDeath()
@@ -80,7 +85,18 @@ class MainActivity : AppCompatActivity() {
 
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-
+        val rootView = findViewById<View>(android.R.id.content)
+        val rect = Rect()
+        rootView.getWindowVisibleDisplayFrame(rect)
+        var height = rect.bottom
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            rootView.getWindowVisibleDisplayFrame(rect)
+            if (rect.bottom< height){
+                tabLayout.visibility = View.GONE
+            }else{
+                tabLayout.visibility = View.VISIBLE
+            }
+        }
         viewPager = findViewById(R.id.pager)
         val chatFragment = ChatFragment()
         val fragments = listOf(chatFragment, CameraFragment(), TracerFragment(traceableAdapter), StatisticsFragment(traceableAdapter))
@@ -148,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    fun showAddTraceableDialog(t : Traceable) {
+    fun showAddTraceableDialog(t : Traceable): Dialog {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.add_traceable_dialog_layout)
         dialog.window!!.setLayout(
@@ -195,7 +211,6 @@ class MainActivity : AppCompatActivity() {
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 // Toast message on menu item clicked
                 when(menuItem.itemId){
-                    //TODO: implement all
                     R.id.menu_item_groceries -> {
                         categorySwitcher.text = TraceableAdapter.categories[GROCERIES]
                         categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[GROCERIES])
@@ -228,22 +243,36 @@ class MainActivity : AppCompatActivity() {
             }
             popupMenu.show()
         }
+        val progressBar = dialog.findViewById<ProgressBar>(R.id.progressBar)
+        dialog.findViewById<ImageButton>(R.id.generateCo2eButton).setOnClickListener {
+            lifecycleScope.launch {
+                try {
+                    progressBar.visibility = View.VISIBLE
+                    val response = withContext(Dispatchers.IO){
+                        traceableAdapter.convertToKg(
+                            traceableAdapter.removeUnwantedChars(
+                                traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t)
+                            )
+                        )
+                    }
+                    co2eEditText.setText(response)
+                    updateTraceableFromEditTextList(t, editTextList)
+                    t.co2e = response
+                }catch (e:Exception){
+                    Toast.makeText(this@MainActivity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                } finally {
+                    progressBar.visibility = View.INVISIBLE
+                }
+
+
+            }
+        }
 
         dialog.findViewById<ImageButton>(R.id.dialog_cancel_button).setOnClickListener { dialog.dismiss()}
         dialog.findViewById<ImageButton>(R.id.dialog_add_button).setOnClickListener {
-            editTextList.forEachIndexed { index, editText ->
-                val text = editText.text.toString()
-                if (index < TraceableAdapter.propertyNames.size) {
-                    val propertyName = TraceableAdapter.propertyNames[index]
-                    val field = t.javaClass.getDeclaredField(propertyName)
-                    field.isAccessible = true // Set the field accessible
-                    field.set(t, text)
-                }
 
-                println("Currently processing EditText at index: $index")
-
-            }
             lifecycleScope.launch {
+                updateTraceableFromEditTextList(t, editTextList)
                 traceableListObject.insertTraceable(t)
             }
             updateListFromDatabase()
@@ -252,7 +281,27 @@ class MainActivity : AppCompatActivity() {
 
 
         dialog.show()
+        return dialog
     }
+    private fun updateTraceableFromEditTextList(t: Traceable, editTextList: List<EditText>){
+        lifecycleScope.launch {
+            withContext(Dispatchers.Default) {
+                editTextList.forEachIndexed { index, editText ->
+                    val text = editText.text.toString()
+                    if (index < TraceableAdapter.propertyNames.size) {
+                        val propertyName = TraceableAdapter.propertyNames[index]
+                        val field = t.javaClass.getDeclaredField(propertyName)
+                        field.isAccessible = true // Set the field accessible
+                        field.set(t, text)
+                    }
+
+                    println("Currently processing EditText at index: $index")
+
+                }
+            }
+        }
+    }
+    //TODO: USE
     private fun isConfigFileExists(): Boolean {
         // Get the file from internal storage
         val file = File(filesDir, "config.json")

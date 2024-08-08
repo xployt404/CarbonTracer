@@ -61,8 +61,8 @@ class ChatFragment : Fragment() {
         clearChatBtn.setOnClickListener {
             lifecycleScope.launch {
                 chatHistory.clearChartHistory()
+                updateChatHistory()
             }
-            updateChatHistory()
         }
 
         messageTextEdit.addTextChangedListener(object : TextWatcher {
@@ -165,8 +165,8 @@ class ChatFragment : Fragment() {
                 msg,
                 Instant.now().toEpochMilli().toString()
             )
+            updateChatHistory()
         }
-        updateChatHistory()
     }
 
     private fun scrollToBottom(){
@@ -212,26 +212,30 @@ class ChatFragment : Fragment() {
         }else{
             stopTypingAnimation()
         }
-        updateChatHistory()
-        scrollToBottom()
+        lifecycleScope.launch{
+            updateChatHistory()
+        }
+
     }
 
-    private fun updateChatHistory(){
-        lifecycleScope.launch {
-            chatHistoryList.lastIndex
-            chatDbList = chatHistory.readChatHistory()
-            chatHistoryList.clear()
-            Log.i(TAG, chatHistoryList.count().toString())
-            chatHistoryList.addAll(chatDbList)
+    private suspend fun updateChatHistory(){
+
+        chatHistoryList.lastIndex
+        chatDbList = chatHistory.readChatHistory()
+        chatHistoryList.clear()
+        Log.i(TAG, chatHistoryList.count().toString())
+        chatHistoryList.addAll(chatDbList)
+        withContext(Dispatchers.Main){
+            chatAdapter.notifyItemInserted(chatHistoryList.lastIndex)
+            scrollToBottom()
         }
-        chatAdapter.notifyItemInserted(chatHistoryList.lastIndex)
     }
 
     private fun sendText(msg: String) {
-        scrollToBottom()
         gHandler.generating = true
         addMessage(msg, false)
         startTypingAnimation()
+        scrollToBottom()
 
         // Launch a coroutine to handle the network call
        lifecycleScope.launch {

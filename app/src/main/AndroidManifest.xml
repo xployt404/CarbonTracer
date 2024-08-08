@@ -18,9 +18,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.CarbonTracer"
-        android:supportsRtl="true"
         tools:targetApi="31">
-        <activity
+        <activity android:windowSoftInputMode="adjustResize"
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
