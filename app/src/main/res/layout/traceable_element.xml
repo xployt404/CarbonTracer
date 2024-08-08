@@ -15,7 +15,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/traceableHeaderLayout"
-            android:background="@drawable/edit_text_background"
+            android:background="@drawable/header_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
 
@@ -59,7 +59,7 @@
 
 
         <TableLayout
-            android:visibility="gone"
+            android:visibility="visible"
             android:animateLayoutChanges="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -86,6 +86,7 @@
 
 
                     <EditText
+android:backgroundTint="@color/edit_text_underline"
                         android:importantForAutofill="no"
                         android:textColor="@color/tracer_text_color"
                         android:id="@+id/nameEditText"
@@ -111,6 +112,7 @@
 
                 <LinearLayout android:orientation="horizontal">
                     <EditText
+                        android:backgroundTint="@color/edit_text_underline"
                         android:focusable="true"
                         android:focusableInTouchMode="true"
                         android:inputType="text"
@@ -137,6 +139,7 @@
                 <LinearLayout android:orientation="horizontal">
 
                     <EditText
+android:backgroundTint="@color/edit_text_underline"
                         android:id="@+id/amountEditText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -160,12 +163,13 @@
                 <LinearLayout android:orientation="horizontal">
 
                     <EditText
+android:backgroundTint="@color/edit_text_underline"
                         android:id="@+id/occurrenceEditText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:importantForAutofill="no"
                         android:maxWidth="300dp"
-                        android:minWidth="110dp"
+                        android:minWidth="150dp"
                         android:inputType="text"
                         android:maxLength="20"
                         android:textColor="@color/tracer_text_color" />
@@ -204,6 +208,7 @@
                     android:orientation="horizontal">
 
                     <EditText
+android:backgroundTint="@color/edit_text_underline"
                         android:id="@+id/co2eEditText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -218,20 +223,28 @@
                         android:contentDescription="Button for AI co2e assesment"
                         android:id="@+id/generateCo2eButton"
                         android:foregroundGravity="center"
-                        android:background="@drawable/edit_text_background"
+                        android:background="@drawable/header_background"
                         android:layout_gravity="end"
                         android:layout_width="50dp"
                         android:layout_height="match_parent"
                         android:src="@drawable/ic_twinkle"/>
 
                     <ProgressBar
-                        android:visibility="invisible"
+                        android:visibility="gone"
                         android:id="@+id/progressBar"
-                        android:scaleX="0.8"
-                        android:scaleY="0.8"
                         style="?android:attr/progressBarStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
+
+                    <ImageButton
+                        android:scaleType="fitCenter"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/icon_background"
+                        android:src="@android:drawable/ic_menu_help"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+
+                        />
 
                 </LinearLayout>
 

@@ -81,7 +81,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                             holder.header.setBackgroundResource(R.drawable.dialog_title_background)
                             currentExpandedTraceable?.body?.visibility = View.GONE
                             currentExpandedTraceable?.expanded = false
-                            currentExpandedTraceable?.header?.setBackgroundResource(R.drawable.edit_text_background)
+                            currentExpandedTraceable?.header?.setBackgroundResource(R.drawable.header_background)
                             holder.expandView(holder.body)
                             currentExpandedTraceable = holder
                         }
@@ -331,7 +331,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             animator.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     view.visibility = View.GONE // Hide the view after the animation ends
-                    this@TraceableViewHolder.header.setBackgroundResource(R.drawable.edit_text_background)
+                    this@TraceableViewHolder.header.setBackgroundResource(R.drawable.header_background)
                 }
             })
             animator.duration = 200 // Set the duration of the animation in milliseconds

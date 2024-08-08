@@ -183,7 +183,7 @@
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
                     android:layout_gravity="end"
-                    android:background="@drawable/edit_text_background"
+                    android:background="@drawable/header_background"
                     android:foregroundGravity="center"
                     android:src="@drawable/ic_twinkle" />
 
@@ -221,7 +221,7 @@
                 android:layout_height="50dp"
                 android:layout_gravity="end"
                 android:backgroundTint="#FF5252"
-                android:background="@drawable/edit_text_background"
+                android:background="@drawable/header_background"
                 android:foregroundGravity="center"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -235,7 +235,7 @@
                 android:layout_height="50dp"
                 android:layout_gravity="end"
                 android:backgroundTint="#8BFD61"
-                android:background="@drawable/edit_text_background"
+                android:background="@drawable/header_background"
                 android:foregroundGravity="center"
                 android:rotation="180"
 

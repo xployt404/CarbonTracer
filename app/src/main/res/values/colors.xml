@@ -13,4 +13,5 @@
     <color name="tracer_text_color">#000000</color>
     <color name="tracer_background">#100F15</color>
     <color name="icon_color">#FFFFFF</color>
+    <color name="edit_text_underline">#313131</color>
 </resources>
