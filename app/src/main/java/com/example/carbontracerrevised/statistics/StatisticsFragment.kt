@@ -3,11 +3,17 @@ package com.example.carbontracerrevised.statistics
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
+import android.text.Html
+import android.text.Html.FROM_HTML_MODE_LEGACY
+import android.text.Spanned
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import com.example.carbontracerrevised.tracer.CONSUMER_PRODUCTS
@@ -33,6 +39,7 @@ import com.github.mikephil.charting.utils.ColorTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class StatisticsFragment() : Fragment() {
@@ -43,6 +50,8 @@ class StatisticsFragment() : Fragment() {
     private var pieEntries = mutableListOf<PieEntry>()
     private var barEntries = mutableListOf<BarEntry>()
     private val traceablesWithCo2e = mutableListOf<Traceable>()
+    private var total = 0f
+    private lateinit var totalCo2TextView: TextView
 
     companion object{
         const val TAG = "StatisticsFragment"
@@ -60,7 +69,7 @@ class StatisticsFragment() : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val statisticsFragment = inflater.inflate(R.layout.statistics_fragment, container, false)
-
+        totalCo2TextView = statisticsFragment.findViewById(R.id.total_co2e)
         setupPieChart(statisticsFragment)
         setupBarChart(statisticsFragment)
         updateListFromDatabase()
@@ -120,100 +129,125 @@ class StatisticsFragment() : Fragment() {
         }
     }
 
-    private fun updatePieChart(){
+    private suspend fun updatePieChart() {
         var co2eGroceries = 0F
-        var co2eTransport= 0F
+        var co2eTransport = 0F
         var co2eConsumer = 0F
         var co2eElectronics = 0F
         var co2eMisc = 0F
-        for (t in traceablesWithCo2e){
-            val co2e = t.co2e.replace(Regex("[^\\d.]"), "").toFloat()
-            Log.d(TAG, "updatePieChart: $co2e")
-            when(t.category){
-                GROCERIES -> co2eGroceries += co2e
-                CONSUMER_PRODUCTS -> co2eConsumer += co2e
-                ELECTRONICS -> co2eElectronics += co2e
-                TRANSPORT -> co2eTransport += co2e
-                else -> co2eMisc += co2e
+        // Use withContext to perform calculations in a background thread
+        withContext(Dispatchers.Default) {
+            for (t in traceablesWithCo2e) {
+                val co2e = t.co2e.toFloatOrNull() ?: 0F // Handle potential conversion issues
+                Log.d(TAG, "updatePieChart: $co2e")
+                when (t.category) {
+                    GROCERIES -> co2eGroceries += co2e
+                    CONSUMER_PRODUCTS -> co2eConsumer += co2e
+                    ELECTRONICS -> co2eElectronics += co2e
+                    TRANSPORT -> co2eTransport += co2e
+                    else -> co2eMisc += co2e
+                }
             }
 
+            // Calculate total
+            total = co2eGroceries + co2eTransport + co2eConsumer + co2eElectronics + co2eMisc
+            // Return the results as a tuple
         }
-        val total = co2eGroceries + co2eTransport + co2eConsumer + co2eElectronics + co2eMisc
-        pieEntries.clear()
-        pieEntries.addAll(
-            listOf(
-            PieEntry((co2eGroceries/total)*100, "Groceries"),
-            PieEntry((co2eConsumer/total)*100, "Consumer Products"),
-            PieEntry((co2eElectronics/total)*100, "Electronics"),
-            PieEntry((co2eTransport/total)*100, "Transport"),
-            PieEntry((co2eMisc/total)*100, "Misc")
-             )
-        )
-        pieEntries.forEach {
-            Log.i("entries", it.toString())
-        }
-        val pieDataSet = PieDataSet(pieEntries, "")
-        pieDataSet.valueFormatter = object : ValueFormatter() {
-            override fun getPieLabel(value: Float, pieEntry: PieEntry): String {
-                return String.format(Locale.US,"%.1f%%", value) // Format as percentage
-            }
-        }
-        pieDataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
-        pieDataSet.colors.add(Color.LTGRAY)
-        val pieData = PieData(pieDataSet)
 
-        pieChart.data = pieData
-        pieChart.data.setDrawValues(false)
-        // Create custom legend entries
-        val legendEntries = pieEntries.map { pieEntry ->
-            LegendEntry(
-                "${pieEntry.label}: ${String.format(Locale.US,"%.1f%%", pieEntry.value)}",
-                Legend.LegendForm.DEFAULT,
-                12f, // Text size
-                5f,  // Form size
-                null, // Form color (null for default)
-                pieDataSet.getColor(pieEntries.indexOf(pieEntry)) // Get color from dataset
+        // Now switch back to the main context to update the UI
+        withContext(Dispatchers.Main) {
+            val styledText: Spanned = HtmlCompat.fromHtml(
+                getString(R.string.total_co2_text, String.format(Locale.US, "%.2f", total)),
+                HtmlCompat.FROM_HTML_MODE_LEGACY
             )
-        }.toMutableList()
+            totalCo2TextView.text = styledText
 
-        // Set custom legend entries
-        pieChart.legend.setCustom(legendEntries)
-    }
-
-    private fun updateBarChart(){
-
-        val sortedTraceables = traceablesWithCo2e.sortedBy { it.co2e.replace(Regex("[^\\d.]"), "").toFloat() }
-        barEntries.clear()
-
-        sortedTraceables.forEachIndexed { index, traceable ->
-            println(traceable.co2e.replace(Regex("[^\\d.]"), "").toFloat())
-            barEntries.add(
-                BarEntry(
-                    index.toFloat(), traceable.co2e.replace(Regex("[^\\d.]"), "").toFloat()
+            pieEntries.clear()
+            pieEntries.addAll(
+                listOf(
+                    PieEntry((co2eGroceries / total) * 100, "Groceries"),
+                    PieEntry((co2eConsumer / total) * 100, "Consumer Products"),
+                    PieEntry((co2eElectronics / total) * 100, "Electronics"),
+                    PieEntry((co2eTransport / total) * 100, "Transport"),
+                    PieEntry((co2eMisc / total) * 100, "Misc")
                 )
             )
+
+            pieEntries.forEach {
+                Log.i("entries", it.toString())
+            }
+
+            val pieDataSet = PieDataSet(pieEntries, "")
+            pieDataSet.valueFormatter = object : ValueFormatter() {
+                override fun getPieLabel(value: Float, pieEntry: PieEntry): String {
+                    return String.format(Locale.US, "%.1f%%", value) // Format as percentage
+                }
+            }
+            pieDataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+            pieDataSet.colors.add(Color.LTGRAY)
+            val pieData = PieData(pieDataSet)
+
+            pieChart.data = pieData
+            pieChart.data.setDrawValues(false)
+
+            // Create custom legend entries
+            val legendEntries = pieEntries.map { pieEntry ->
+                LegendEntry(
+                    "${pieEntry.label}: ${String.format(Locale.US, "%.1f%%", pieEntry.value)}",
+                    Legend.LegendForm.DEFAULT,
+                    12f, // Text size
+                    5f,  // Form size
+                    null, // Form color (null for default)
+                    pieDataSet.getColor(pieEntries.indexOf(pieEntry)) // Get color from dataset
+                )
+            }.toMutableList()
+
+            // Set custom legend entries
+            pieChart.legend.setCustom(legendEntries)
+
+            // Refresh the pie chart to display the new data
+            pieChart.invalidate() // Call this to refresh the chart
+        }
+    }
+
+
+    private fun updateBarChart(){
+        lifecycleScope.launch {
+            val sortedTraceables = traceableAdapter.sortTraceablesBy(TracerFragment.SORT_BY_CO2E)
+            barEntries.clear()
+            sortedTraceables.forEachIndexed { index, traceable ->
+                println(traceable.co2e.replace(Regex("[^\\d.]"), "").toFloat())
+                barEntries.add(
+                    BarEntry(
+                        index.toFloat(), traceable.co2e.replace(Regex("[^\\d.]"), "").toFloat()
+                    )
+                )
+            }
+
+            val labels = sortedTraceables.map { it.objectName }
+            val barDataSet = BarDataSet(barEntries, "Data Set")
+            barDataSet.colors = ColorTemplate.LIBERTY_COLORS.toList()
+            val barData = BarData(barDataSet)
+
+            barChart.apply {
+                xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+                data = barData
+                invalidate()
+            }
         }
 
-        val labels = sortedTraceables.map { it.objectName }
-        val barDataSet = BarDataSet(barEntries, "Data Set")
-        barDataSet.colors = ColorTemplate.LIBERTY_COLORS.toList()
-        val barData = BarData(barDataSet)
-
-        barChart.apply {
-            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-            data = barData
-            invalidate()
-        }
     }
 
     private fun updateStatistic() {
         traceablesWithCo2e.clear()
         for (t in traceableAdapter.traceableList){
-            if (t.co2e.isNotEmpty()){
+            val extractedNumberAsString = t.co2e.replace(Regex("[^\\d.]"), "")
+            if (extractedNumberAsString.isNotEmpty()){
+                t.co2e = extractedNumberAsString
                 traceablesWithCo2e.add(t)
             }
         }
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch {
             updatePieChart()
         }
          updateBarChart()

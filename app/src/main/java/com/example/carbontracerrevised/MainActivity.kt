@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
     fun updateListFromDatabase() {
-        lifecycleScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch {
             traceableAdapter.traceableList.clear()
             traceableAdapter.traceableList.addAll(traceableListObject.readTracer())
 
@@ -285,9 +285,8 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
         return dialog
     }
-    private fun updateTraceableFromEditTextList(t: Traceable, editTextList: List<EditText>){
-        lifecycleScope.launch {
-            withContext(Dispatchers.Default) {
+    private suspend fun updateTraceableFromEditTextList(t: Traceable, editTextList: List<EditText>){
+        withContext(Dispatchers.Main) {
                 editTextList.forEachIndexed { index, editText ->
                     val text = editText.text.toString()
                     if (index < TraceableAdapter.propertyNames.size) {
@@ -301,15 +300,14 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
-        }
     }
+
     //TODO: USE
     private fun isConfigFileExists(): Boolean {
         // Get the file from internal storage
         val file = File(filesDir, "config.json")
         return file.exists() // Check if the file exists
     }
-
 
 
 }

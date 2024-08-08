@@ -360,6 +360,31 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         return result
     }
 
+    suspend fun sortTraceablesBy(criteria: Int) : List<Traceable>{
+
+        return withContext(Dispatchers.Default){
+            when(criteria){
+                TracerFragment.SORT_BY_NAME->{
+                    traceableList.sortedBy { it.objectName }
+                }
+                TracerFragment.SORT_BY_CATEGORY -> {
+                    traceableList.sortedBy { it.category }
+                }
+                TracerFragment.SORT_BY_CO2E -> {
+                    traceableList.sortedBy {
+                        when {
+                            it.co2e.isEmpty() -> 0f // Handle empty string
+                            else -> it.co2e.replace(Regex("[^\\d.]"), "").toFloatOrNull() ?: 0f // Handle invalid strings
+                        }
+                    }
+                }
+                else -> {
+                    traceableList
+                }
+            }
+        }
+    }
+
 
     companion object {
         const val TAG = "TraceableAdapter"
@@ -367,6 +392,5 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             listOf("Groceries", "Consumer Products", "Electronics", "Transport", "Misc")
         val propertyNames = listOf("objectName", "material", "amount", "occurrence", "co2e")
     }
-
 
 }

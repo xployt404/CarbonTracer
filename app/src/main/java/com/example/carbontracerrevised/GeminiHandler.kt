@@ -151,7 +151,7 @@ class GeminiModel : CoroutineScope{
                                 "Your main purpose is to answer questions regarding ecological sustainability. " +
                                 "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
                                 "You are given an audio file that contains a recording which contains the request of the user. " +
-                                "If you are unable to make out coherent sentences tell the user. Answer in ${R.string.language}."
+                                "If you are unable to make out coherent sentences tell the user."
                     )
                 },
                 generationConfig = generationConfig {

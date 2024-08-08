@@ -39,34 +39,77 @@ class TracerFragment() : Fragment() {
         traceableAdapter.addAndUnselectBtn = addAndUnselectBtn
         traceableAdapter.selectAllBtn = selectAllBtn
 
+        val sortingPopMenu = PopupMenu(requireContext(), optionsAndClearBtn)
+
+        // Inflating popup menu from popup_menu.xml file
+        sortingPopMenu.menuInflater.inflate(R.menu.sorting_menu, sortingPopMenu.menu)
+        sortingPopMenu.setOnMenuItemClickListener { menuItem ->
+            lifecycleScope.launch {
+                val sortedTraceables =  when(menuItem.itemId){
+                        R.id.menu_item_sort_by_name -> {
+                            traceableAdapter.sortTraceablesBy(SORT_BY_NAME)
+                        }
+                        R.id.menu_item_sort_by_category -> {
+                            traceableAdapter.sortTraceablesBy(SORT_BY_CATEGORY)
+                        }
+                        R.id.menu_item_sort_by_co2e -> {
+                            traceableAdapter.sortTraceablesBy(SORT_BY_CO2E)
+                        }
+                        else -> {
+                            traceableAdapter.traceableList
+                        }
+                    }
+                lifecycleScope.launch {
+                    try {
+                        withContext(Dispatchers.Default) {
+                            traceableAdapter.traceableList.clear()
+                            traceableAdapter.traceableList.addAll(sortedTraceables)
+                        }
+                        withContext(Dispatchers.Main) {
+                            traceableAdapter.notifyDataSetChanged()
+                        }
+                    } catch (e: Exception) {
+                        // Handle the exception (e.g., log it or show a message to the user)
+                    }
+                }
+
+            }
+
+            true
+        }
+        val settingsPopMenu = PopupMenu(requireContext(), optionsAndClearBtn)
+
+        // Inflating popup menu from popup_menu.xml file
+        settingsPopMenu.menuInflater.inflate(R.menu.options_menu, settingsPopMenu.menu)
+        settingsPopMenu.setOnMenuItemClickListener { menuItem ->
+            // Toast message on menu item clicked
+            when(menuItem.itemId){
+                //TODO: implement all
+                R.id.menu_item_help -> {
+
+                }
+                R.id.menu_item_generate ->{
+
+                }
+                R.id.menu_item_select_all ->{
+                    selectAllTraceables()
+                }
+                R.id.menu_item_sort_by ->{
+                    sortingPopMenu.show()
+                }
+            }
+
+            true
+        }
+
         optionsAndClearBtn.setOnClickListener {
             when(traceableAdapter.selectModeEnabled){
                 false -> {
                     //TODO: display options for traceable
                     // Initializing the popup menu and giving the reference as current context
-                    val popupMenu = PopupMenu(requireContext(), optionsAndClearBtn)
-
-                    // Inflating popup menu from popup_menu.xml file
-                    popupMenu.menuInflater.inflate(R.menu.options_menu, popupMenu.menu)
-                    popupMenu.setOnMenuItemClickListener { menuItem ->
-                        // Toast message on menu item clicked
-                        when(menuItem.itemId){
-                            //TODO: implement all
-                            R.id.menu_item_help -> {
-
-                            }
-                            R.id.menu_item_generate ->{
-
-                            }
-                            R.id.menu_item_select_all ->{
-                                selectAllTraceables()
-                            }
-                        }
-
-                        true
-                    }
+                    // Generate all, Help, sort
                     // Showing the popup menu
-                    popupMenu.show()
+                    settingsPopMenu.show()
                 }
                 true -> {
                     lifecycleScope.launch {
@@ -131,6 +174,9 @@ class TracerFragment() : Fragment() {
             fragment.traceableAdapter = adapter // Set the adapter
             return fragment
         }
+        const val SORT_BY_NAME = 0
+        const val SORT_BY_CATEGORY = 1
+        const val SORT_BY_CO2E = 2
     }
 
 }

@@ -22,7 +22,7 @@
 
     <TextView
         android:layout_marginTop="36dp"
-        android:text="Total CO2:  0"
+        android:text="@string/total_co2_text"
         android:background="@drawable/header_background"
         android:paddingVertical="10dp"
         android:paddingLeft="6dp"
