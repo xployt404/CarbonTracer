@@ -1,8 +1,7 @@
 <resources>
     <string name="app_name">CarbonTracer</string>
     <string name="api_key">AIzaSyBNzzQPdZ_PXjvrQOnwQIDZJWtrG1cFXME</string>
-    <string name="welcome_introduction">
-    Global Warming is a challenge that will haunt us probably <b>until this century is over</b>.\nCenturies is also the time politics takes to make notable changes.\nThat is why <b>the first step towards change starts with us.</b>\nTaking that step requires a <b>simple and fast assessment of your carbon footprint</b>.\nSo go ahead and <b>trace your carbons!</b>
+    <string name="welcome_introduction">Global Warming is a challenge that will haunt us probably <b>until this century is over</b>.\nCenturies is also the time politics takes to make notable changes.\nThat is why <b>the first step towards change starts with us.</b>\nTaking that step requires a <b>simple and fast assessment of your carbon footprint</b>.\nSo go ahead and <b>trace your carbons!</b>
 </string>
     <string name="tutorial_intro">
     Carbon Tracer consists of four elements: <b>the chat, camera, Tracer, and a statistics page.</b>\n\n

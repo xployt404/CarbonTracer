@@ -10,42 +10,40 @@
 
 
     <TextView
-        android:id="@+id/welcome_title"
-        android:layout_width="0dp"
+        android:id="@+id/api_prompt_text"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome to CarbonTracer!"
+        android:text="Please enter your Gemini API Key"
         android:textColor="#FDE7E7"
-        android:textAlignment="center"
-        android:textSize="40sp"
-        android:layout_marginHorizontal="10dp"
+        android:gravity="center"
+        android:textSize="25sp"
         android:textStyle="bold"
         android:fontFamily="serif-monospace"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
-    <TextView
-        android:id="@+id/welcome_message"
+    <EditText
+        android:id="@+id/api_edit_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="40dp"
-        android:fontFamily="serif-monospace"
-        android:text="@string/welcome_introduction"
-        android:textAlignment="textStart"
-        android:textColor="#FFFFFF"
+        android:layout_marginHorizontal="40dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="API Key"
+        android:textColor="@color/black"
+        android:padding="10dp"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@id/continue_button"
+        app:layout_constraintBottom_toTopOf="@+id/continue_button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.4"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/welcome_title" />
+        app:layout_constraintTop_toBottomOf="@+id/api_prompt_text"
+        app:layout_constraintVertical_bias="0.35" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/continue_button"
         android:layout_width="300dp"
         android:layout_height="70dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="25dp"
         android:backgroundTint="#CBFFFFFF"
         android:text="Get started"
         android:textColor="@color/black"
@@ -65,6 +63,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.18" />
+        app:layout_constraintGuide_begin="176dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

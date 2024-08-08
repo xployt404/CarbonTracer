@@ -4,7 +4,6 @@ package com.example.carbontracerrevised
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import com.example.carbontracerrevised.chat.ChatHistory
@@ -19,13 +18,12 @@ import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
-import kotlin.coroutines.CoroutineContext
 
 class GeminiModel {
     var chatHistoryString = ""
@@ -35,34 +33,38 @@ class GeminiModel {
     }
 
 
-    inner class Text(context : Context, modelName: String = "gemini-1.5-pro") {
-        private val model = GenerativeModel(
-            modelName,
-            apiKey = context.getString(R.string.api_key),
-            systemInstruction = content{
-                text(
-                    "You are an assistant that assists in making more eco-friendly choices. " +
-                            "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
-                            "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
-                            "You can Answer to short greetings etc."
-                )
-            },
-            generationConfig = generationConfig {
-                temperature = 0.4f
-                topK = 32
-                topP = 1f
-                maxOutputTokens = 4096
-            },
-            safetySettings = listOf(
-                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
-                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
-                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
-            ),
-        )
-
+    inner class Text(private val context: Context, private val modelName: String = "gemini-1.5-pro") {
+        private lateinit var model: GenerativeModel
+        private var apiKey: String = ""
 
         suspend fun sendPrompt(prompt: String): Deferred<String> = coroutineScope {
+            apiKey = ConfigFile.getJsonAttribute(
+                ConfigFile.read(context),
+                "apiKey").toString()
+            model = GenerativeModel(
+                modelName,
+                apiKey = apiKey,
+                systemInstruction = content {
+                    text(
+                        "You are an assistant that assists in making more eco-friendly choices. " +
+                                "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
+                                "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
+                                "You can Answer to short greetings etc."
+                    )
+                },
+                generationConfig = generationConfig {
+                    temperature = 0.4f
+                    topK = 32
+                    topP = 1f
+                    maxOutputTokens = 4096
+                },
+                safetySettings = listOf(
+                    SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
+                    SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
+                    SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
+                )
+            )
             generating = true
             chatHistoryString += "input: \n$prompt"
             async(Dispatchers.IO) {
@@ -80,7 +82,7 @@ class GeminiModel {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.0-pro-vision-latest",
-                context.getString(R.string.api_key)
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
                 // Retrieve API key as an environmental variable defined in a Build Configuration
                 // see https://github.com/google/secrets-gradle-plugin for further instructions
                 ,
@@ -140,7 +142,7 @@ class GeminiModel {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.5-pro",
-                context.getString(R.string.api_key)
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
                 // Retrieve API key as an environmental variable defined in a Build Configuration
                 // see https://github.com/google/secrets-gradle-plugin for further instructions
                 ,
@@ -204,7 +206,7 @@ class GeminiModel {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.5-flash",
-                context.getString(R.string.api_key),
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString(),
                 // Retrieve API key as an environmental variable defined in a Build Configuration
                 // see https://github.com/google/secrets-gradle-plugin for further instructions
                 generationConfig = generationConfig {
@@ -272,7 +274,7 @@ class GeminiModel {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.5-pro",
-                context.getString(R.string.api_key)
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
                 // Retrieve API key as an environmental variable defined in a Build Configuration
                 // see https://github.com/google/secrets-gradle-plugin for further instructions
                 , systemInstruction = content {

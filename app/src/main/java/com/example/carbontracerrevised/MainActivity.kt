@@ -42,7 +42,9 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -126,10 +128,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
         lifecycleScope.launch {
-            if (configFileExists()) {
-                val jsonString = readJsonFromConfigFile()
-                parseJsonConfig(jsonString)
-            } else{
+            if (!configFileExists()){
                 startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
             }
         }
@@ -304,27 +303,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun readJsonFromConfigFile(): String {
-        return openFileInput("config.json").bufferedReader().use { it.readText() }
-    }
 
-    private fun parseJsonConfig(jsonString: String): Config {
-        val gson = Gson()
-        return gson.fromJson(jsonString, Config::class.java)
-    }
 
-    private fun saveConfigToFile(config: Config) {
-        val gson = Gson()
-        val jsonString = gson.toJson(config)
-        openFileOutput("config.json", Context.MODE_PRIVATE).use { output ->
-            output.write(jsonString.toByteArray())
-        }
-    }
-
-    data class Config(
-        var apiKey: String,
-        var flashMode: Boolean
-    )
 
     fun checkAndRequestPermissions(permissions: Array<String>): Boolean {
         return if (!checkPermissions(permissions)) {
