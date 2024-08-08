@@ -17,7 +17,7 @@
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
-        android:background="@color/tracer_background"
+        android:background="@drawable/tab_layout_background"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         app:tabIconTint="@color/white"

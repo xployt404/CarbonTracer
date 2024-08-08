@@ -72,16 +72,14 @@ class StatisticsFragment(private val traceableAdapter: TraceableAdapter) : Fragm
             elevation = 8f
             extraBottomOffset = 15f
             isDrawHoleEnabled = false
+            setHoleColor(R.color.tracer_background)
             description.text = "CO2 per category"
             description.textSize = 20f
             description.textColor = Color.WHITE
-            description.textAlign = Paint.Align.LEFT
-            description.setPosition(400f, 850f)
+            description.yOffset = -10f
             legend.apply {
                 textColor = Color.WHITE
                 orientation = Legend.LegendOrientation.VERTICAL
-                verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-                horizontalAlignment = Legend.LegendHorizontalAlignment.LEFT
                 setDrawInside(false)
             }
 
@@ -133,7 +131,6 @@ class StatisticsFragment(private val traceableAdapter: TraceableAdapter) : Fragm
 
         }
         val total = co2eGroceries + co2eTransport + co2eConsumer + co2eElectronics + co2eMisc
-        Log.i(TAG, "updatePieChart total: $total")
         pieEntries.clear()
         pieEntries.addAll(
             listOf(
