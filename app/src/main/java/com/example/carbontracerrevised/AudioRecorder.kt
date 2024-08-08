@@ -64,11 +64,15 @@ class AudioRecorder {
 
 
     fun stopRecording() {
-        if (isRecording){
-            isRecording = false
-            // To stop recording
-            mediaRecorder.stop()
-            mediaRecorder.release()
+        try {
+            if (isRecording){
+                isRecording = false
+                // To stop recording
+                mediaRecorder.stop()
+                mediaRecorder.release()
+            }
+        }catch (e:Exception){
+            Log.e(TAG, "stopRecording: ${e.message}", )
         }
     }
 }

@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraControl
@@ -30,6 +29,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.GeminiModel
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
@@ -38,6 +38,7 @@ import com.example.carbontracerrevised.tracer.Traceable
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
@@ -52,11 +53,11 @@ class CameraFragment : Fragment() {
     private lateinit var cameraControl : CameraControl
     private lateinit var progressBar: ProgressBar
     private lateinit var model: GeminiModel
-    private lateinit var showAfterGenerating : List<View>
     private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
     private var imageCapture : ImageCapture? = null
     var mode = TRACER
     private var flashMode = FLASH_MODE_OFF
+    private var imageAnalyzeJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,13 +77,13 @@ class CameraFragment : Fragment() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-
         model = GeminiModel()
 
         captureBtn.setOnClickListener{
             if (imageView.visibility == View.VISIBLE){
-                captureBtn.setImageResource(android.R.drawable.ic_menu_camera)
+                captureBtn.setImageResource(0)
                 imageView.visibility = View.INVISIBLE
+                imageAnalyzeJob?.cancel()
             }else{
                 progressBar.visibility = View.VISIBLE
                 takePhoto()
@@ -162,7 +163,7 @@ class CameraFragment : Fragment() {
                     captureBtn.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
                     previewView.setBackgroundColor(Color.WHITE)
 
-                    CoroutineScope(Dispatchers.Main).launch {
+                    imageAnalyzeJob = lifecycleScope.launch {
                         try {
                             when(mode){
                                 CHAT -> {
@@ -194,8 +195,8 @@ class CameraFragment : Fragment() {
                             model.generating = false
                         }finally {
                             image.close()
+                            progressBar.visibility = View.INVISIBLE
                         }
-                        progressBar.visibility = View.INVISIBLE
                     }
                 }
             }

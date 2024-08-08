@@ -261,6 +261,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             generateCo2eButton = view.findViewById(R.id.generateCo2eButton)
             categorySwitcher = view.findViewById(R.id.categorySwitcher)
             progressBar = view.findViewById(R.id.progressBar)
+            progressBar
 
             amountEditText = view.findViewById(R.id.amountEditText)
             occurrenceEditText = view.findViewById(R.id.occurrenceEditText)

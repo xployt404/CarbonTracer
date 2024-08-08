@@ -2,6 +2,7 @@ package com.example.carbontracerrevised
 
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
@@ -11,13 +12,12 @@ import android.os.StrictMode.VmPolicy
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.carbontracerrevised.camera.CameraFragment
 import com.example.carbontracerrevised.chat.ChatFragment
+import com.example.carbontracerrevised.onboardingscreen.OnboardingActivity
 import com.example.carbontracerrevised.statistics.StatisticsFragment
 import com.example.carbontracerrevised.tracer.CONSUMER_PRODUCTS
 import com.example.carbontracerrevised.tracer.ELECTRONICS
@@ -37,6 +38,7 @@ import com.example.carbontracerrevised.tracer.TraceableAdapter
 import com.example.carbontracerrevised.tracer.TraceableList
 import com.example.carbontracerrevised.tracer.TracerFragment
 import com.google.android.material.tabs.TabLayout
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,42 +56,44 @@ class MainActivity : AppCompatActivity() {
     private val traceableAdapter = TraceableAdapter(this, lifecycleScope, traceableList)
     private var lastPage = CAMERA
     private lateinit var viewPager: ViewPager2
+    private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
 
-    private val requestMultiplePermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val allGranted = permissions.all { it.value }
-            if (!allGranted) {
-                //TODO: add permission handling
-            } else {
-            }
-        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        traceableListObject = TraceableList.getInstance(this)
         setContentView(R.layout.activity_main)
         //TODO: Remove
-         StrictMode.setThreadPolicy(
-                ThreadPolicy.Builder()
-                    .penaltyDeath()
-                    .penaltyLog()
-                    .detectAll()
-                    .build()
-            )
-            StrictMode.setVmPolicy(
-                VmPolicy.Builder()
-                    .detectLeakedSqlLiteObjects()
-                    .detectLeakedClosableObjects()
-                    .penaltyLog()
-                    .build()
-            )
-
+        StrictMode.setThreadPolicy(
+            ThreadPolicy.Builder()
+                .penaltyDeath()
+                .penaltyLog()
+                .detectAll()
+                .build()
+        )
+        StrictMode.setVmPolicy(
+            VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .build()
+        )
+        // Initialize the permission request launcher
+        requestMultiplePermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            handlePermissionsResult(permissions)
+        }
+        traceableListObject = TraceableList.getInstance(this)
+        viewPager = findViewById(R.id.pager)
+        val tracerFragment = TracerFragment.newInstance(traceableAdapter)
+        val fragments = listOf(ChatFragment(), CameraFragment(), tracerFragment, StatisticsFragment.newInstance(traceableAdapter))
+        val adapter = ViewPagerAdapter(this@MainActivity, fragments)
+        viewPager.adapter = adapter
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val rootView = findViewById<View>(android.R.id.content)
         val rect = Rect()
         rootView.getWindowVisibleDisplayFrame(rect)
-        var height = rect.bottom
+        val height = rect.bottom
         rootView.viewTreeObserver.addOnGlobalLayoutListener {
             rootView.getWindowVisibleDisplayFrame(rect)
             if (rect.bottom< height){
@@ -98,14 +102,6 @@ class MainActivity : AppCompatActivity() {
                 tabLayout.visibility = View.VISIBLE
             }
         }
-        viewPager = findViewById(R.id.pager)
-        val tracerFragment = TracerFragment.newInstance(traceableAdapter)
-        val fragments = listOf(ChatFragment(), CameraFragment(), tracerFragment, StatisticsFragment.newInstance(traceableAdapter))
-        val adapter = ViewPagerAdapter(this, fragments)
-        viewPager.adapter = adapter
-
-
-
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 // This method will be invoked when a tab is selected
@@ -122,7 +118,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -130,6 +125,14 @@ class MainActivity : AppCompatActivity() {
                 lastPage = position
             }
         })
+        lifecycleScope.launch {
+            if (configFileExists()) {
+                val jsonString = readJsonFromConfigFile()
+                parseJsonConfig(jsonString)
+            } else{
+                startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+            }
+        }
     }
     fun updateListFromDatabase() {
         lifecycleScope.launch {
@@ -148,22 +151,10 @@ class MainActivity : AppCompatActivity() {
         viewPager.currentItem = 1
     }
 
-    fun checkAndRequestPermissions(permissions: Array<String>) : Boolean{
-        if (!checkPermissions(permissions)){
-            requestMultiplePermissionsLauncher.launch(permissions)
-            return false
-        }else{
-            return true
-        }
-    }
-    private fun checkPermissions(permissions: Array<String>): Boolean {
-        for (permission in permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                return false
-            }
-        }
-        return true
-    }
+
+
+
+
 
     fun showAddTraceableDialog(t : Traceable): Dialog {
         val dialog = Dialog(this)
@@ -287,27 +278,80 @@ class MainActivity : AppCompatActivity() {
     }
     private suspend fun updateTraceableFromEditTextList(t: Traceable, editTextList: List<EditText>){
         withContext(Dispatchers.Main) {
-                editTextList.forEachIndexed { index, editText ->
-                    val text = editText.text.toString()
-                    if (index < TraceableAdapter.propertyNames.size) {
-                        val propertyName = TraceableAdapter.propertyNames[index]
-                        val field = t.javaClass.getDeclaredField(propertyName)
-                        field.isAccessible = true // Set the field accessible
-                        field.set(t, text)
-                    }
-
-                    println("Currently processing EditText at index: $index")
-
+            editTextList.forEachIndexed { index, editText ->
+                val text = editText.text.toString()
+                if (index < TraceableAdapter.propertyNames.size) {
+                    val propertyName = TraceableAdapter.propertyNames[index]
+                    val field = t.javaClass.getDeclaredField(propertyName)
+                    field.isAccessible = true // Set the field accessible
+                    field.set(t, text)
                 }
+
+                println("Currently processing EditText at index: $index")
+
             }
+        }
     }
 
-    //TODO: USE
-    private fun isConfigFileExists(): Boolean {
-        // Get the file from internal storage
-        val file = File(filesDir, "config.json")
-        return file.exists() // Check if the file exists
+//TODO: USE
+
+
+    private suspend fun configFileExists(): Boolean {
+        return  withContext(Dispatchers.IO){
+            // Get the file from internal storage
+            val file = File(filesDir, "config.json")
+            file.exists() // Check if the file exists
+        }
     }
 
+    private fun readJsonFromConfigFile(): String {
+        return openFileInput("config.json").bufferedReader().use { it.readText() }
+    }
 
+    private fun parseJsonConfig(jsonString: String): Config {
+        val gson = Gson()
+        return gson.fromJson(jsonString, Config::class.java)
+    }
+
+    private fun saveConfigToFile(config: Config) {
+        val gson = Gson()
+        val jsonString = gson.toJson(config)
+        openFileOutput("config.json", Context.MODE_PRIVATE).use { output ->
+            output.write(jsonString.toByteArray())
+        }
+    }
+
+    data class Config(
+        var apiKey: String,
+        var flashMode: Boolean
+    )
+
+    fun checkAndRequestPermissions(permissions: Array<String>): Boolean {
+        return if (!checkPermissions(permissions)) {
+            // Launch the permission request
+            requestMultiplePermissionsLauncher.launch(permissions)
+            false // Indicate that permissions were not granted yet
+        } else {
+            true // All permissions are already granted
+        }
+    }
+
+    private fun handlePermissionsResult(permissions: Map<String, Boolean>) {
+        val allGranted = permissions.all { it.value }
+        if (!allGranted) {
+            Toast.makeText(this, "Missing Permissions, exiting :(", Toast.LENGTH_SHORT).show()
+            finish() // Exit the app or handle as needed
+        }
+    }
+
+    private fun checkPermissions(permissions: Array<String>): Boolean {
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
+    }
 }
+
+

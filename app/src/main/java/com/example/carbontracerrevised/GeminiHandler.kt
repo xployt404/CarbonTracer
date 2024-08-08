@@ -27,15 +27,13 @@ import java.io.File
 import java.time.Instant
 import kotlin.coroutines.CoroutineContext
 
-class GeminiModel : CoroutineScope{
+class GeminiModel {
     var chatHistoryString = ""
     var generating = false
     companion object{
         private const val TAG = "GeminiModel"
     }
-    private var job: Job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+
 
     inner class Text(context : Context, modelName: String = "gemini-1.5-pro") {
         private val model = GenerativeModel(
@@ -44,8 +42,8 @@ class GeminiModel : CoroutineScope{
             systemInstruction = content{
                 text(
                     "You are an assistant that assists in making more eco-friendly choices. " +
-                    "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
-                    "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
+                            "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
+                            "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
                             "You can Answer to short greetings etc."
                 )
             },
@@ -69,7 +67,8 @@ class GeminiModel : CoroutineScope{
             chatHistoryString += "input: \n$prompt"
             async(Dispatchers.IO) {
                 model.generateContent(content {
-                    text(chatHistoryString)
+                    text(prompt)
+
                 }).text!!
             }
         }
@@ -90,14 +89,14 @@ class GeminiModel : CoroutineScope{
                     topK = 32
                     topP = 1f
                     maxOutputTokens = 4096
-                                                    },
-                    safetySettings = listOf(
-                        SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                        SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
-                        SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
-                        SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
-                    ),
-                )
+                },
+                safetySettings = listOf(
+                    SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
+                ),
+            )
 
 
             if (images.any { false }) {
@@ -147,10 +146,13 @@ class GeminiModel : CoroutineScope{
                 ,
                 systemInstruction = content{
                     text(
-                        "You are an assistant that assist in making more eco friendly choices. " +
-                                "Your main purpose is to answer questions regarding ecological sustainability. " +
-                                "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
+                        "You are an assistant that assists in making more eco-friendly choices. " +
+                                "Your purpose is to answer questions regarding ecological sustainability. " +
                                 "You are given an audio file that contains a recording which contains the request of the user. " +
+                                "Your response contains the spoken words you heard and your answer to the request stated in the audio." +
+                                "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
+                                "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
+                                "You can Answer to short greetings etc."+
                                 "If you are unable to make out coherent sentences tell the user."
                     )
                 },
@@ -176,15 +178,23 @@ class GeminiModel : CoroutineScope{
                         "audio/ogg", File(fileUri.path!!).readBytes()
                     )
                     text("Listen to the request then respond. ")
-                    text("output: ")
+                    text("output: " +
+                            "spoken_words: \n" +
+                            "answer: ")
                 }
             )
             Log.d(TAG, response.text.toString())
-            // Get the first text part of the first candidate
-            chatHistory?.insertChatMessage(true,
-                response.text.toString(), Instant.now().toEpochMilli().toString())
+
+
+            // Extracting spoken_words
+            val spokenWords = Regex("spoken_words: (.+?)\\n").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
+            chatHistory?.insertChatMessage(false, spokenWords, Instant.now().toEpochMilli().toString())
+
+            // Extracting answer
+            val answer =  Regex("answer: (.+)").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
+            chatHistory?.insertChatMessage(true, answer, Instant.now().toEpochMilli().toString())
+
             generating = false
-            Toast.makeText(context, "finished", Toast.LENGTH_SHORT).show()
             // Alternatively
             print(response.candidates.first().content.parts.first().asTextOrNull())
         }
@@ -254,9 +264,6 @@ class GeminiModel : CoroutineScope{
                 response.text.toString(), Instant.now().toEpochMilli().toString())
             generating = false
 
-            Looper.prepare()
-            Toast.makeText(context, "finished", Toast.LENGTH_SHORT).show()
-
 
             return response.text!!
         }
@@ -279,7 +286,7 @@ class GeminiModel : CoroutineScope{
                             "If the object is a washing machine for instance, the electricity usage is relevant and not the manufacturing and transport emissions." +
                             "For products that are disposed after usage and have to be bought frequently its the other way around of course." +
                             "In the last line of your response only write the amount of CO2 you assumed plus the unit of mass but nothing more."
-                            )
+                    )
                 },
                 generationConfig = generationConfig {
                     temperature = 0.2f
@@ -306,7 +313,7 @@ class GeminiModel : CoroutineScope{
                 text("output:" )
             }
             val response = withContext(Dispatchers.IO){
-                 model.generateContent(
+                model.generateContent(
                     content
                 )
             }

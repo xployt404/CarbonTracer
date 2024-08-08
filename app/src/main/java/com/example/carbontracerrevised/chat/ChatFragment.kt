@@ -145,7 +145,8 @@ class ChatFragment : Fragment() {
                     gHandler.File().sendFile(requireContext(),
                         File(
                             requireContext().filesDir, "recording.ogg"
-                        ).toUri()
+                        ).toUri(),
+                        chatHistory
                     )
                 }
             }catch (e : Exception){
@@ -261,7 +262,7 @@ class ChatFragment : Fragment() {
     }
     companion object{
         private const val TAG = "ChatFragment"
-        private val REQUIRED_PERMISSIONS = arrayOf(RECORD_AUDIO, INTERNET, CAMERA, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE)
+        private val REQUIRED_PERMISSIONS = arrayOf(RECORD_AUDIO, INTERNET, CAMERA)
     }
 
     override fun onStop() {
