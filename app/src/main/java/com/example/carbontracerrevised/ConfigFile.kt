@@ -43,10 +43,10 @@ class ConfigFile {
         }
 
 
-        fun updateJsonAttribute(jsonString: String, key: String, newValue: Any): String {
-            val jsonObject = JSONObject(jsonString)
+        suspend fun updateJsonAttribute(context: Context, key: String, newValue: Any) {
+            val jsonObject = JSONObject(read(context).toString())
             jsonObject.put(key, newValue) // Update the attribute
-            return jsonObject.toString() // Return the modified JSON as a string
+            write(context, jsonObject.toString())
         }
     }
 }

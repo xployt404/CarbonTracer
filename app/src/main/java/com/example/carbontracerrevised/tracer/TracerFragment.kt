@@ -1,10 +1,16 @@
 package com.example.carbontracerrevised.tracer
 
+import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.Context
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
@@ -12,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.carbontracerrevised.ConfigFile
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +30,7 @@ class TracerFragment() : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
     private fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var recyclerView: RecyclerView
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -97,6 +105,9 @@ class TracerFragment() : Fragment() {
                 R.id.menu_item_sort_by ->{
                     sortingPopMenu.show()
                 }
+                R.id.menu_item_api_key ->{
+                    showApiKeyDialog()
+                }
             }
 
             true
@@ -161,6 +172,44 @@ class TracerFragment() : Fragment() {
             view?.foreground = ContextCompat.getDrawable(requireContext(), R.drawable.traceable_selected)
         }
         traceableAdapter.toggleSelectMode()
+    }
+    // Function to show the dialog
+    private fun showApiKeyDialog() {
+        // Create a Dialog
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.dialog_api_key)
+        dialog.window!!.setLayout(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Find the EditText and Buttons
+        val editTextApiKey = dialog.findViewById<EditText>(R.id.editTextApiKey)
+        val okButton = dialog.findViewById<ImageButton>(R.id.ok_button)
+        val cancelButton = dialog.findViewById<ImageButton>(R.id.cancel_button)
+
+        // Set click listeners
+        okButton.setOnClickListener {
+            val apiKey = editTextApiKey.text.toString()
+            onApiKeyEntered(apiKey) // Handle the API key input
+            dialog.dismiss()
+        }
+        cancelButton.setOnClickListener {
+            dialog.cancel()
+        }
+
+        // Show the dialog
+        dialog.show()
+    }
+
+
+    private fun onApiKeyEntered(apiKey: String) {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO){
+                ConfigFile.updateJsonAttribute(requireContext(), "apiKey", apiKey)
+            }
+        }
     }
 
 
