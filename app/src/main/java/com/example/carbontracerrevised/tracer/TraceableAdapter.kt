@@ -4,9 +4,11 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.drawable.ColorDrawable
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
@@ -249,6 +251,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         val generateCo2eButton: ImageButton
          val categorySwitcher: Button
          val progressBar: ProgressBar
+         val categoryIndicator : Button
 
 
         internal var editTextList : MutableList<EditText>
@@ -266,6 +269,8 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             materialEditText = view.findViewById(R.id.materialEditText)
             co2eEditText = view.findViewById(R.id.co2eEditText)
             nameTextView = header.findViewById(R.id.objectName)
+            categoryIndicator = header.findViewById(R.id.category_indicator)
+
 
             editTextList = mutableListOf(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
             nameEditText.doOnTextChanged { text, _, _, _ ->
@@ -296,7 +301,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                 categorySwitcher.text = categories[category]
                 categorySwitcher.setBackgroundColor(pieChartColors[category])
                 co2eEditText.setText(traceable.co2e)
-
+                categoryIndicator.backgroundTintList = ColorStateList.valueOf(pieChartColors[category])
             }
         }
 

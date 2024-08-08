@@ -99,8 +99,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         viewPager = findViewById(R.id.pager)
-        val chatFragment = ChatFragment()
-        val fragments = listOf(chatFragment, CameraFragment(), TracerFragment(traceableAdapter), StatisticsFragment(traceableAdapter))
+        val tracerFragment = TracerFragment.newInstance(traceableAdapter)
+        val fragments = listOf(ChatFragment(), CameraFragment(), tracerFragment, StatisticsFragment.newInstance(traceableAdapter))
         val adapter = ViewPagerAdapter(this, fragments)
         viewPager.adapter = adapter
 
@@ -249,6 +249,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     progressBar.visibility = View.VISIBLE
+                    updateTraceableFromEditTextList(t, editTextList)
                     val response = withContext(Dispatchers.IO){
                         traceableAdapter.convertToKg(
                             traceableAdapter.removeUnwantedChars(

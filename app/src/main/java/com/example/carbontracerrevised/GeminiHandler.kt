@@ -278,7 +278,7 @@ class GeminiModel : CoroutineScope{
                             "Your task is to calculate the produced CO2e yearly for the occurrence time frame given by the user." +
                             "If the object is a washing machine for instance, the electricity usage is relevant and not the manufacturing and transport emissions." +
                             "For products that are disposed after usage and have to be bought frequently its the other way around of course." +
-                            "In the last line of your response write only the amount of CO2 you assumed plus the unit of mass but nothing more."
+                            "In the last line of your response only write the amount of CO2 you assumed plus the unit of mass but nothing more."
                             )
                 },
                 generationConfig = generationConfig {

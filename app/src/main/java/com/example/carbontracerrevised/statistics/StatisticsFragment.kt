@@ -16,6 +16,7 @@ import com.example.carbontracerrevised.tracer.GROCERIES
 import com.example.carbontracerrevised.tracer.TRANSPORT
 import com.example.carbontracerrevised.tracer.Traceable
 import com.example.carbontracerrevised.tracer.TraceableAdapter
+import com.example.carbontracerrevised.tracer.TracerFragment
 import com.github.mikephil.charting.charts.HorizontalBarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
@@ -34,7 +35,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class StatisticsFragment(private val traceableAdapter: TraceableAdapter) : Fragment() {
+class StatisticsFragment() : Fragment() {
+    private lateinit var traceableAdapter: TraceableAdapter
     private fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var pieChart: PieChart
     private lateinit var barChart: HorizontalBarChart
@@ -44,6 +46,12 @@ class StatisticsFragment(private val traceableAdapter: TraceableAdapter) : Fragm
 
     companion object{
         const val TAG = "StatisticsFragment"
+        fun newInstance(adapter: TraceableAdapter): StatisticsFragment {
+                val fragment = StatisticsFragment()
+                fragment.traceableAdapter = adapter // Set the adapter
+                return fragment
+            }
+
     }
 
     override fun onCreateView(

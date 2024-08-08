@@ -14,10 +14,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
-class TracerFragment(private val traceableAdapter: TraceableAdapter) : Fragment() {
+class TracerFragment() : Fragment() {
+    private lateinit var traceableAdapter: TraceableAdapter
     private fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var recyclerView: RecyclerView
     override fun onCreateView(
@@ -27,8 +30,8 @@ class TracerFragment(private val traceableAdapter: TraceableAdapter) : Fragment(
     ): View? {
         val tracerFragment = inflater.inflate(R.layout.tracer_fragment, container, false)
         recyclerView = tracerFragment.findViewById(R.id.traceableRecycler)
-        recyclerView.adapter = traceableAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.adapter = traceableAdapter
         val optionsAndClearBtn = tracerFragment.findViewById<ImageButton>(R.id.options_and_clear_button)
         val addAndUnselectBtn = tracerFragment.findViewById<ImageButton>(R.id.add_and_unselect_button)
         val selectAllBtn = tracerFragment.findViewById<Button>(R.id.select_all_button)
@@ -67,11 +70,17 @@ class TracerFragment(private val traceableAdapter: TraceableAdapter) : Fragment(
                 }
                 true -> {
                     lifecycleScope.launch {
-                        (requireActivity() as MainActivity).traceableListObject.deleteTraceable(traceableAdapter.selectedItems)
+                        (requireActivity() as MainActivity).traceableListObject.deleteTraceable(
+                            traceableAdapter.selectedItems
+                        )
+                        withContext(Dispatchers.IO){
+                            traceableAdapter.selectedItems.clear()
+                        }
+                        withContext(Dispatchers.Main){
+                            updateListFromDatabase()
+                            traceableAdapter.toggleSelectMode()
+                        }
                     }
-                    traceableAdapter.selectedItems.clear()
-                    updateListFromDatabase()
-                    traceableAdapter.toggleSelectMode()
                 }
             }
 
@@ -116,4 +125,12 @@ class TracerFragment(private val traceableAdapter: TraceableAdapter) : Fragment(
         super.onResume()
         updateListFromDatabase()
     }
+    companion object {
+        fun newInstance(adapter: TraceableAdapter): TracerFragment {
+            val fragment = TracerFragment()
+            fragment.traceableAdapter = adapter // Set the adapter
+            return fragment
+        }
+    }
+
 }
