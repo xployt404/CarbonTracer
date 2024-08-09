@@ -44,7 +44,7 @@ import java.util.Locale
 
 class StatisticsFragment() : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
-    private fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
+    private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var pieChart: PieChart
     private lateinit var barChart: HorizontalBarChart
     private var pieEntries = mutableListOf<PieEntry>()
@@ -72,7 +72,9 @@ class StatisticsFragment() : Fragment() {
         totalCo2TextView = statisticsFragment.findViewById(R.id.total_co2e)
         setupPieChart(statisticsFragment)
         setupBarChart(statisticsFragment)
-        updateListFromDatabase()
+        lifecycleScope.launch {
+            updateListFromDatabase()
+        }
         return statisticsFragment
     }
 
@@ -125,6 +127,7 @@ class StatisticsFragment() : Fragment() {
             }
             axisLeft.textColor = Color.WHITE
             axisRight.isEnabled = false
+            animateX(1200)
             animateY(1200)
         }
     }
@@ -211,9 +214,12 @@ class StatisticsFragment() : Fragment() {
     }
 
 
-    private fun updateBarChart(){
-        lifecycleScope.launch {
-            val sortedTraceables = traceableAdapter.sortTraceablesBy(TracerFragment.SORT_BY_CO2E)
+    private suspend fun updateBarChart(){
+        var labels : List<String>
+        var barData : BarData
+        withContext(Dispatchers.Default) {
+            val sortedTraceables =
+                traceableAdapter.sortTraceablesBy(TracerFragment.SORT_BY_CO2E, traceablesWithCo2e)
             barEntries.clear()
             sortedTraceables.forEachIndexed { index, traceable ->
                 println(traceable.co2e.replace(Regex("[^\\d.]"), "").toFloat())
@@ -224,18 +230,19 @@ class StatisticsFragment() : Fragment() {
                 )
             }
 
-            val labels = sortedTraceables.map { it.objectName }
+
             val barDataSet = BarDataSet(barEntries, "Data Set")
             barDataSet.colors = ColorTemplate.LIBERTY_COLORS.toList()
-            val barData = BarData(barDataSet)
-
+            barData = BarData(barDataSet)
+            labels = sortedTraceables.map { it.objectName }
+        }
+        withContext(Dispatchers.Main){
             barChart.apply {
                 xAxis.valueFormatter = IndexAxisValueFormatter(labels)
                 data = barData
                 invalidate()
             }
         }
-
     }
 
     private fun updateStatistic() {
@@ -250,6 +257,9 @@ class StatisticsFragment() : Fragment() {
         lifecycleScope.launch {
             updatePieChart()
         }
-         updateBarChart()
+        lifecycleScope.launch {
+            updateBarChart()
+        }
+
     }
 }

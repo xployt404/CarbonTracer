@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -39,6 +40,7 @@ import kotlinx.coroutines.withContext
 
 class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
     private lateinit var traceableListObject: TraceableList
+    var previousLastIndex = 0
     var selectModeEnabled = false
     val selectedItems = mutableListOf<Traceable>()
     val model = GeminiModel()
@@ -68,9 +70,10 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         //TODO: Set the color of the ProgressBar to blue
 
 
-        val clickToCollapse = listOf<View>(
+        val clickToCollapse = listOf(
             holder.header,
             holder.header.findViewById(R.id.objectName),
+            holder.categoryIndicator,
             holder.header.findViewById(R.id.co2e)
         )
         for (v in clickToCollapse){
@@ -134,6 +137,15 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                 }
             }
         }
+        holder.occurrenceEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
+            {
+                // Handle the Enter key press here
+                holder.categorySwitcher.performClick()
+                return@OnKeyListener true // Consume the event
+            }
+            false // Let the system handle other key events
+        })
         holder.categorySwitcher.setOnClickListener {
             val popupMenu = PopupMenu(activity, holder.categorySwitcher)
 
@@ -162,6 +174,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
                 true
             }
+            holder.co2eEditText.requestFocus()
             popupMenu.show()
         }
         holder.generateCo2eButton.setOnClickListener {
@@ -242,7 +255,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         val body: TableLayout
 
         private val amountEditText: EditText
-        private val occurrenceEditText: EditText
+        val occurrenceEditText: EditText
         private val co2eTextView: TextView
         private val nameEditText: EditText
         private val materialEditText: EditText
@@ -361,18 +374,18 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         return result
     }
 
-    suspend fun sortTraceablesBy(criteria: Int) : List<Traceable>{
+    suspend fun sortTraceablesBy(criteria: Int, list: MutableList<Traceable> = traceableList) : List<Traceable>{
 
         return withContext(Dispatchers.Default){
             when(criteria){
                 TracerFragment.SORT_BY_NAME->{
-                    traceableList.sortedBy { it.objectName }
+                    list.sortedBy { it.objectName }
                 }
                 TracerFragment.SORT_BY_CATEGORY -> {
-                    traceableList.sortedBy { it.category }
+                    list.sortedBy { it.category }
                 }
                 TracerFragment.SORT_BY_CO2E -> {
-                    traceableList.sortedBy {
+                    list.sortedBy {
                         when {
                             it.co2e.isEmpty() -> 0f // Handle empty string
                             else -> it.co2e.replace(Regex("[^\\d.]"), "").toFloatOrNull() ?: 0f // Handle invalid strings
@@ -380,7 +393,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     }
                 }
                 else -> {
-                    traceableList
+                    list
                 }
             }
         }

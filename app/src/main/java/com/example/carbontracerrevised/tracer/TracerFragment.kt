@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 
 class TracerFragment() : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
-    private fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
+    private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var recyclerView: RecyclerView
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
@@ -131,6 +131,11 @@ class TracerFragment() : Fragment() {
                             traceableAdapter.selectedItems.clear()
                         }
                         withContext(Dispatchers.Main){
+                            for (i in 0 until recyclerView.childCount) {
+                                val view: View? = recyclerView.getChildAt(i)
+
+                                view?.foreground = null
+                            }
                             updateListFromDatabase()
                             traceableAdapter.toggleSelectMode()
                         }
@@ -215,7 +220,9 @@ class TracerFragment() : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        updateListFromDatabase()
+        lifecycleScope.launch {
+            updateListFromDatabase()
+        }
     }
     companion object {
         fun newInstance(adapter: TraceableAdapter): TracerFragment {

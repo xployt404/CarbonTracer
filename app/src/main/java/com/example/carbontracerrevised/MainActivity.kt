@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
 
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -133,17 +132,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    fun updateListFromDatabase() {
-        lifecycleScope.launch {
+    suspend fun updateListFromDatabase() {
+        withContext(Dispatchers.Default) {
             traceableAdapter.traceableList.clear()
             traceableAdapter.traceableList.addAll(traceableListObject.readTracer())
+        }
 
-            // Update UI on the main thread
+        // Update UI on the main thread
             withContext(Dispatchers.Main) {
-                traceableAdapter.notifyDataSetChanged() // Consider using more specific notify methods
+                traceableAdapter.notifyDataSetChanged()
             }
         }
-    }
 
     override fun onStart() {
         super.onStart()
@@ -182,17 +181,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         val editTextList = mutableListOf(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
-        editTextList.forEachIndexed { index, editText ->
-            editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
-                {
-                    // Handle the Enter key press here
-                    editTextList[index+1].requestFocus()
-                    return@OnKeyListener true // Consume the event
-                }
-                false // Let the system handle other key events
-            })
-        }
+        occurrenceEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
+            {
+                // Handle the Enter key press here
+                categorySwitcher.performClick()
+                return@OnKeyListener true // Consume the event
+            }
+            false // Let the system handle other key events
+        })
 
         categorySwitcher.setOnClickListener {
             val popupMenu = PopupMenu(this, categorySwitcher)
@@ -229,7 +226,7 @@ class MainActivity : AppCompatActivity() {
                         t.category = MISC
                     }
                 }
-
+                co2eEditText.requestFocus()
                 true
             }
             popupMenu.show()
@@ -266,8 +263,9 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 updateTraceableFromEditTextList(t, editTextList)
                 traceableListObject.insertTraceable(t)
+                updateListFromDatabase()
             }
-            updateListFromDatabase()
+
             dialog.dismiss()
         }
 
