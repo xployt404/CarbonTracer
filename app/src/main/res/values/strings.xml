@@ -18,7 +18,7 @@
     <string name="what_is_tracer_text">
     <b>The Tracer</b> is the heart of this app.\nIt is a list of all the objects, activities, etc. that the user added to assess their CO2 emissions.\nThey are referred to as <b>Traceables</b>.
 </string>
-    <string name="total_co2_text">Total yearly CO2:  &lt;b>%1$s kg&lt;/b></string>
+    <string name="total_co2_text">&lt;b>%1$s kg&lt;/b></string>
 
     <string-array name="occurence_array">
         <item>daily</item>

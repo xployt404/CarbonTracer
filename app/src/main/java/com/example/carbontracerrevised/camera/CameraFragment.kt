@@ -3,13 +3,16 @@ package com.example.carbontracerrevised.camera
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.INTERNET
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Matrix
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.OrientationEventListener
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -46,6 +49,7 @@ import java.util.concurrent.Executors
 
 class CameraFragment : Fragment() {
     private lateinit var captureBtn: ImageButton
+    private lateinit var flashBtn: ImageButton
     private lateinit var objectInfo: String
     private lateinit var previewView: PreviewView
     private lateinit var imageView: ImageView
@@ -54,6 +58,7 @@ class CameraFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var model: GeminiModel
     private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
+    private lateinit var  orientationEventListener : OrientationEventListener
     private var imageCapture : ImageCapture? = null
     var mode = TRACER
     private var flashMode = FLASH_MODE_OFF
@@ -72,7 +77,7 @@ class CameraFragment : Fragment() {
         imageView = cameraView.findViewById(R.id.imageView)
         progressBar = cameraView.findViewById(R.id.progressBar)
         captureBtn = cameraView.findViewById(R.id.captureButton)
-        val flashBtn = cameraView.findViewById<ImageButton>(R.id.flashButton)
+        flashBtn = cameraView.findViewById<ImageButton>(R.id.flashButton)
 
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -209,12 +214,32 @@ class CameraFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         progressBar.visibility = View.GONE
         stopCamera()
     }
 
     override fun onResume() {
         super.onResume()
+        // Initialize the OrientationEventListener
+        orientationEventListener = object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
+            override fun onOrientationChanged(orientation: Int) {
+                // Check the orientation and determine landscape side
+                when (orientation) {
+                    in 315..360, in 0..45 -> {
+                        // Landscape Right (90 degrees)
+                        flashBtn.rotation = -200f
+                        (activity as MainActivity).handleCameraRotation(90f)
+                    }
+                    in 135..225 -> {
+                        // Landscape Left (270 degrees)
+                        flashBtn.rotation = -90f
+                        (activity as MainActivity).handleCameraRotation(-90f)
+                    }
+                }
+            }
+        }
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
         if ((requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)){
             startCamera()
         }else{
@@ -241,6 +266,7 @@ class CameraFragment : Fragment() {
         // Rotate the bitmap if necessary
         return rotateBitmap(bitmap, image.imageInfo.rotationDegrees.toFloat()) // Adjust the angle as needed
     }
+
 
     companion object {
         private const val TAG = "CameraFragment"

@@ -1,9 +1,15 @@
 package com.example.carbontracerrevised
 
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.StrictMode
@@ -28,6 +34,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.carbontracerrevised.camera.CameraFragment
@@ -67,11 +74,13 @@ class MainActivity : AppCompatActivity() {
     private var lastPage = CAMERA
     private lateinit var viewPager: ViewPager2
     private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var tabLayout: TabLayout
 
-
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         //TODO: Remove
         StrictMode.setThreadPolicy(
             ThreadPolicy.Builder()
@@ -99,7 +108,8 @@ class MainActivity : AppCompatActivity() {
         val adapter = ViewPagerAdapter(this@MainActivity, fragments)
         viewPager.adapter = adapter
 
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+
+        tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val rootView = findViewById<View>(android.R.id.content)
         val rect = Rect()
         rootView.getWindowVisibleDisplayFrame(rect)
@@ -385,6 +395,22 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
+
+    fun handleCameraRotation(rotation: Float) {
+
+        val animatorSet = AnimatorSet()
+        val animators = tabLayout.children.map { view ->
+            ObjectAnimator.ofFloat(view, "rotation", 0f, 360f).apply {
+                duration = 1000 // Duration in milliseconds
+            }
+        }
+        // Play all animations together
+        animatorSet.playTogether(animators.toMutableList() as Collection<Animator>?)
+
+        // Start the animation
+        animatorSet.start()
+    }
+
 }
 
 

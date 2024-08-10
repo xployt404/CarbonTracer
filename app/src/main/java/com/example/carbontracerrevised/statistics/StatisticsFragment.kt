@@ -42,11 +42,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-class StatisticsFragment() : Fragment() {
+class StatisticsFragment : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
     private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var pieChart: PieChart
     private lateinit var barChart: HorizontalBarChart
+    private lateinit var totalYearlyTextView: TextView
+    private lateinit var totalMonthlyTextView: TextView
+    private lateinit var totalDailyTextView: TextView
     private var pieEntries = mutableListOf<PieEntry>()
     private var barEntries = mutableListOf<BarEntry>()
     private val traceablesWithCo2e = mutableListOf<Traceable>()
@@ -70,6 +73,11 @@ class StatisticsFragment() : Fragment() {
     ): View? {
         val statisticsFragment = inflater.inflate(R.layout.statistics_fragment, container, false)
         totalCo2TextView = statisticsFragment.findViewById(R.id.total_co2e)
+        totalYearlyTextView = statisticsFragment.findViewById(R.id.total_yearly)
+        totalMonthlyTextView = statisticsFragment.findViewById(R.id.total_monthly)
+        totalDailyTextView = statisticsFragment.findViewById(R.id.total_daily)
+
+
         setupPieChart(statisticsFragment)
         setupBarChart(statisticsFragment)
         lifecycleScope.launch {
@@ -159,11 +167,9 @@ class StatisticsFragment() : Fragment() {
 
         // Now switch back to the main context to update the UI
         withContext(Dispatchers.Main) {
-            val styledText: Spanned = HtmlCompat.fromHtml(
-                getString(R.string.total_co2_text, String.format(Locale.US, "%.2f", total)),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
-            )
-            totalCo2TextView.text = styledText
+            totalYearlyTextView.text = String.format(Locale.US, "%.2f", total)
+            totalMonthlyTextView.text = String.format(Locale.US, "%.2f", total/12)
+            totalDailyTextView.text = String.format(Locale.US, "%.2f", total/365)
 
             pieEntries.clear()
             pieEntries.addAll(
