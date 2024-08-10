@@ -79,6 +79,28 @@ class CameraFragment : Fragment() {
         captureBtn = cameraView.findViewById(R.id.captureButton)
         flashBtn = cameraView.findViewById<ImageButton>(R.id.flashButton)
 
+        // Initialize the OrientationEventListener
+        orientationEventListener = object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
+            override fun onOrientationChanged(orientation: Int) {
+                // Check the orientation and determine landscape side
+                when (orientation) {
+                    in 315..360, in 0..45 -> {
+                        (activity as MainActivity).handleCameraRotation(flashBtn, 0f)
+                    }
+                    in 46..134 -> {
+                        (activity as MainActivity).handleCameraRotation(flashBtn, -90f)
+                    }
+//                    in 135..225 -> {
+//                        // Landscape Left (270 degrees)
+//                        flashBtn.rotation = 0f
+//                        (activity as MainActivity).handleCameraRotation(0f)
+//                    }
+                    in 226..314 -> {
+                        (activity as MainActivity).handleCameraRotation(flashBtn, 90f)
+                    }
+                }
+            }
+        }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -214,32 +236,14 @@ class CameraFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         progressBar.visibility = View.GONE
         stopCamera()
     }
 
     override fun onResume() {
         super.onResume()
-        // Initialize the OrientationEventListener
-        orientationEventListener = object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
-            override fun onOrientationChanged(orientation: Int) {
-                // Check the orientation and determine landscape side
-                when (orientation) {
-                    in 315..360, in 0..45 -> {
-                        // Landscape Right (90 degrees)
-                        flashBtn.rotation = -200f
-                        (activity as MainActivity).handleCameraRotation(90f)
-                    }
-                    in 135..225 -> {
-                        // Landscape Left (270 degrees)
-                        flashBtn.rotation = -90f
-                        (activity as MainActivity).handleCameraRotation(-90f)
-                    }
-                }
-            }
-        }
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+
+        orientationEventListener.enable()
         if ((requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)){
             startCamera()
         }else{

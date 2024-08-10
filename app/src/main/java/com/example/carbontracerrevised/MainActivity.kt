@@ -396,16 +396,16 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    fun handleCameraRotation(rotation: Float) {
+    fun handleCameraRotation(flashBtn : ImageButton, newRotation: Float) {
 
         val animatorSet = AnimatorSet()
-        val animators = tabLayout.children.map { view ->
-            ObjectAnimator.ofFloat(view, "rotation", 0f, 360f).apply {
+        val animators : List<ObjectAnimator> = (tabLayout.children + flashBtn).map { view ->
+            ObjectAnimator.ofFloat(view, "rotation", view.rotation, newRotation).apply {
                 duration = 1000 // Duration in milliseconds
             }
-        }
+        }.toList()
         // Play all animations together
-        animatorSet.playTogether(animators.toMutableList() as Collection<Animator>?)
+        animatorSet.playTogether(*animators.toTypedArray())
 
         // Start the animation
         animatorSet.start()
