@@ -190,7 +190,10 @@ class CameraFragment : Fragment() {
                             }
 
                         }catch (e : Exception){
-                            Log.e("Gemini ERROR", "${e.message.toString()}\nCause: ${e.cause} \n ${e.suppressedExceptions}")
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                            }
+                            Log.e("Gemini ERROR", "${e.message.toString()}\nCause: ${e} \n ${e.suppressedExceptions}")
                             e.printStackTrace()
                             model.generating = false
                         }finally {

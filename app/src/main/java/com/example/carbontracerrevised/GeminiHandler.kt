@@ -4,12 +4,15 @@ package com.example.carbontracerrevised
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.Nullable
 import com.example.carbontracerrevised.chat.ChatHistory
 import com.example.carbontracerrevised.tracer.Traceable
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.asTextOrNull
@@ -270,7 +273,7 @@ class GeminiModel {
             return response.text!!
         }
 
-        suspend fun generateCo2e(context: Context, traceable: Traceable): String {
+        suspend fun generateCo2e(context: Context, traceable: Traceable, fullResponse : Boolean = false): List<String?> {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.5-pro",
@@ -315,10 +318,10 @@ class GeminiModel {
                 text("output:" )
             }
             val response = withContext(Dispatchers.IO){
-                model.generateContent(
-                    content
-                )
-            }
+                    model.generateContent(
+                        content
+                    )
+                }
 
 
             // Get the first text part of the first candidate
@@ -329,7 +332,11 @@ class GeminiModel {
 
             Log.i("CO2E", splitResponse.toString())
 
-            return splitResponse.last()
+            return if (!fullResponse){
+                listOf(splitResponse.last())
+            } else {
+                listOf(splitResponse.last(), response.text)
+            }
 
         }
 

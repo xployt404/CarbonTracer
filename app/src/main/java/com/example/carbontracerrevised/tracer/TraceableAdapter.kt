@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.ColorDrawable
+import android.os.Looper
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
@@ -30,12 +31,15 @@ import androidx.core.transition.doOnStart
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.GeminiModel
+import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import com.github.mikephil.charting.utils.ColorTemplate
+import com.google.ai.client.generativeai.type.UnknownException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.UnknownHostException
 
 
 class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
@@ -118,26 +122,27 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
         holder.editTextList.forEachIndexed { index, editText ->
             Log.d(TAG, "onBindViewHolder: FocusListener $index set")
-            editText.setOnFocusChangeListener { view, hasFocus ->
+            editText.setOnFocusChangeListener { _, hasFocus ->
                 lifecycleScope.launch {
                     Log.d(TAG, "onBindViewHolder: focusChange")
-                if (!hasFocus) {
-                    val text = (view as EditText).text.toString()
-
-                    if (index < propertyNames.size) {
-                        val propertyName = propertyNames[index]
-                        val field = item.javaClass.getDeclaredField(propertyName)
-                        field.isAccessible = true // Set the field accessible
-                        field.set(item, text)
+                    if (hasFocus){
+                        editText.setSelection(editText.text.length)
                     }
+                    else {
+                        val text = editText.text.toString()
 
-
+                        if (index < propertyNames.size) {
+                            val propertyName = propertyNames[index]
+                            val field = item.javaClass.getDeclaredField(propertyName)
+                            field.isAccessible = true // Set the field accessible
+                            field.set(item, text)
+                        }
                         traceableListObject.updateTraceable(item)
                     }
                 }
             }
         }
-        holder.occurrenceEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+        holder.materialEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
             {
                 // Handle the Enter key press here
@@ -146,6 +151,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             }
             false // Let the system handle other key events
         })
+
         holder.categorySwitcher.setOnClickListener {
             val popupMenu = PopupMenu(activity, holder.categorySwitcher)
 
@@ -171,37 +177,48 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                         holder.updateCategory(item, MISC)
                     }
                 }
-
+                holder.amountEditText.requestFocus()
                 true
             }
-            holder.co2eEditText.requestFocus()
             popupMenu.show()
+        }
+        var fullResponse = ""
+        holder.showFullResponseBtn.setOnClickListener {
+            (activity as MainActivity).showPopupWindow(it, fullResponse)
         }
         holder.generateCo2eButton.setOnClickListener {
             // Use lifecycleScope to ensure proper lifecycle management
             holder.progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
+                withContext(Dispatchers.Default) {
 
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        val response = convertToKg(
-                            removeUnwantedChars(
-                                model.Tracer().generateCo2e(activity.applicationContext, item)
-                            )
-                        )
-                        item.co2e = response
+                    try {
+                        val response = model.Tracer().generateCo2e(activity.applicationContext, item, true)
+                        val calculatedCO2e = convertToKg(removeUnwantedChars(response[0]!!))
+                        fullResponse = response[1]!!
+                        item.co2e = calculatedCO2e
                         traceableListObject.updateTraceable(item)
-                        return@withContext response
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        holder.co2eEditText.setText(response)}
-                }catch (e:Exception){
-                    Toast.makeText(activity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
-                }finally {
-                    withContext(Dispatchers.Main){
-                        holder.progressBar.visibility = View.INVISIBLE
-
+                        withContext(Dispatchers.Main) {
+                            holder.co2eEditText.setText(calculatedCO2e)
+                        }
+                    }catch (e:UnknownException){
+                        withContext(Dispatchers.Main){
+                            Toast.makeText(activity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                        }
+                    }catch (e:Exception){
+                        withContext(Dispatchers.Main) {
+                            Log.e(TAG, "onBindViewHolder: ${e.cause}",)
+                            Toast.makeText(
+                                activity,
+                                "Response from the AI was inconclusive >_<",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }finally {
+                        withContext(Dispatchers.Main){
+                            holder.progressBar.visibility = View.GONE
+                            holder.showFullResponseBtn.visibility = View.VISIBLE
+                        }
                     }
                 }
             }
@@ -224,14 +241,14 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
     }
 
     private fun rotateView(view: View, newRotation : Float){
-    val animator = ValueAnimator.ofFloat(view.rotation, newRotation)
-    animator.addUpdateListener { animation ->
-        val animatedValue = animation.animatedValue as Float
-        view.rotation = animatedValue
+        val animator = ValueAnimator.ofFloat(view.rotation, newRotation)
+        animator.addUpdateListener { animation ->
+            val animatedValue = animation.animatedValue as Float
+            view.rotation = animatedValue
+        }
+        animator.duration = 200 // Set the duration of the animation in milliseconds
+        animator.start() // Start the animation
     }
-    animator.duration = 200 // Set the duration of the animation in milliseconds
-    animator.start() // Start the animation
-}
 
     fun toggleSelectMode(){
         Log.d(TAG, "toggleSelectMode: toggled")
@@ -254,36 +271,37 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         val header : ConstraintLayout
         val body: TableLayout
 
-        private val amountEditText: EditText
-        val occurrenceEditText: EditText
+        val amountEditText: EditText
+        private val occurrenceEditText: EditText
         private val co2eTextView: TextView
         private val nameEditText: EditText
-        private val materialEditText: EditText
-         val co2eEditText: EditText
+        val materialEditText: EditText
+        val co2eEditText: EditText
         private val nameTextView: TextView
         val generateCo2eButton: ImageButton
-         val categorySwitcher: Button
-         val progressBar: ProgressBar
-         val categoryIndicator : Button
+        val showFullResponseBtn : ImageButton
+        val categorySwitcher: Button
+        val progressBar: ProgressBar
+        val categoryIndicator : Button
 
 
         internal var editTextList : MutableList<EditText>
         init {
-             header = view.findViewById(R.id.traceableHeaderLayout)
-             body = view.findViewById(R.id.tracerExpandedPart)
-            generateCo2eButton = view.findViewById(R.id.generateCo2eButton)
-            categorySwitcher = view.findViewById(R.id.categorySwitcher)
-            progressBar = view.findViewById(R.id.progressBar)
-            progressBar
-
-            amountEditText = view.findViewById(R.id.amountEditText)
-            occurrenceEditText = view.findViewById(R.id.occurrenceEditText)
-            co2eTextView = header.findViewById(R.id.co2e)
-            nameEditText = view.findViewById(R.id.nameEditText)
-            materialEditText = view.findViewById(R.id.materialEditText)
-            co2eEditText = view.findViewById(R.id.co2eEditText)
+            header = view.findViewById(R.id.traceableHeaderLayout)
             nameTextView = header.findViewById(R.id.objectName)
             categoryIndicator = header.findViewById(R.id.category_indicator)
+            co2eTextView = header.findViewById(R.id.co2e)
+
+            body = view.findViewById(R.id.tracerExpandedPart)
+            nameEditText = view.findViewById(R.id.nameEditText)
+            materialEditText = view.findViewById(R.id.materialEditText)
+            amountEditText = body.findViewById(R.id.amountEditText)
+            occurrenceEditText = view.findViewById(R.id.occurrenceEditText)
+            categorySwitcher = body.findViewById(R.id.categorySwitcher)
+            co2eEditText = view.findViewById(R.id.co2eEditText)
+            generateCo2eButton = body.findViewById(R.id.generateCo2eButton)
+            progressBar = body.findViewById(R.id.progressBar)
+            showFullResponseBtn = body.findViewById(R.id.show_full_response_button)
 
 
             editTextList = mutableListOf(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
@@ -291,7 +309,9 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                 nameTextView.text = text
             }
             co2eEditText.doOnTextChanged { text, _, _, _ ->
-                co2eTextView.text = text
+                co2eTextView.text = text.toString()
+                    .replace("kg", "")
+                    .replace(" ", "")
             }
         }
         internal fun updateCategory(item: Traceable, category: Int) {
@@ -307,7 +327,6 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         fun bind(traceable: Traceable) {
             Log.d(TAG, "bind: bind")
             with(traceable) {
-                nameTextView.text = traceable.objectName
                 nameEditText.setText(traceable.objectName)
                 materialEditText.setText(traceable.material)
                 amountEditText.setText(traceable.amount)

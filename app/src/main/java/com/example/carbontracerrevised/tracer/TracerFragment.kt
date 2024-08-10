@@ -181,31 +181,34 @@ class TracerFragment() : Fragment() {
     // Function to show the dialog
     private fun showApiKeyDialog() {
         // Create a Dialog
-        val dialog = Dialog(requireContext())
-        dialog.setContentView(R.layout.dialog_api_key)
-        dialog.window!!.setLayout(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        lifecycleScope.launch {
+            val dialog = Dialog(requireContext())
+            dialog.setContentView(R.layout.dialog_api_key)
+            dialog.window!!.setLayout(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        // Find the EditText and Buttons
-        val editTextApiKey = dialog.findViewById<EditText>(R.id.editTextApiKey)
-        val okButton = dialog.findViewById<ImageButton>(R.id.ok_button)
-        val cancelButton = dialog.findViewById<ImageButton>(R.id.cancel_button)
+            // Find the EditText and Buttons
+            val editTextApiKey = dialog.findViewById<EditText>(R.id.editTextApiKey)
+            editTextApiKey.setText(ConfigFile.read(requireContext()))
+            val okButton = dialog.findViewById<ImageButton>(R.id.ok_button)
+            val cancelButton = dialog.findViewById<ImageButton>(R.id.cancel_button)
 
-        // Set click listeners
-        okButton.setOnClickListener {
-            val apiKey = editTextApiKey.text.toString()
-            onApiKeyEntered(apiKey) // Handle the API key input
-            dialog.dismiss()
+            // Set click listeners
+            okButton.setOnClickListener {
+                val apiKey = editTextApiKey.text.toString()
+                onApiKeyEntered(apiKey) // Handle the API key input
+                dialog.dismiss()
+            }
+            cancelButton.setOnClickListener {
+                dialog.cancel()
+            }
+
+            // Show the dialog
+            dialog.show()
         }
-        cancelButton.setOnClickListener {
-            dialog.cancel()
-        }
-
-        // Show the dialog
-        dialog.show()
     }
 
 

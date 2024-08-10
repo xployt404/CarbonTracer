@@ -9,13 +9,19 @@ import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
+import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.PopupWindow
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,8 +41,10 @@ import com.example.carbontracerrevised.tracer.MISC
 import com.example.carbontracerrevised.tracer.TRANSPORT
 import com.example.carbontracerrevised.tracer.Traceable
 import com.example.carbontracerrevised.tracer.TraceableAdapter
+import com.example.carbontracerrevised.tracer.TraceableAdapter.Companion.TAG
 import com.example.carbontracerrevised.tracer.TraceableList
 import com.example.carbontracerrevised.tracer.TracerFragment
+import com.google.ai.client.generativeai.type.UnknownException
 import com.google.android.material.tabs.TabLayout
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private var traceableList : MutableList<Traceable> = mutableListOf()
     lateinit var traceableListObject: TraceableList
-    private val traceableAdapter = TraceableAdapter(this, lifecycleScope, traceableList)
+    private lateinit var traceableAdapter : TraceableAdapter
     private var lastPage = CAMERA
     private lateinit var viewPager: ViewPager2
     private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
@@ -85,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         }
         traceableListObject = TraceableList.getInstance(this)
         viewPager = findViewById(R.id.pager)
+        traceableAdapter = TraceableAdapter(this, lifecycleScope, traceableList)
         val tracerFragment = TracerFragment.newInstance(traceableAdapter)
         val fragments = listOf(ChatFragment(), CameraFragment(), tracerFragment, StatisticsFragment.newInstance(traceableAdapter))
         val adapter = ViewPagerAdapter(this@MainActivity, fragments)
@@ -139,19 +148,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Update UI on the main thread
-            withContext(Dispatchers.Main) {
-                traceableAdapter.notifyDataSetChanged()
-            }
+        withContext(Dispatchers.Main) {
+            traceableAdapter.notifyDataSetChanged()
         }
+    }
 
     override fun onStart() {
         super.onStart()
         viewPager.currentItem = 1
     }
+    fun showPopupWindow(anchorView: View, fullResponse :String) {
+        // Inflate the popup_layout.xml
+        val inflater = LayoutInflater.from(this)
+        val popupView = inflater.inflate(R.layout.full_response_pop_up, null)
 
 
+        // Create the PopupWindow
+        val popupWindow = PopupWindow(popupView,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT)
 
+        popupView.findViewById<TextView>(R.id.popupText).text = fullResponse
+        // Set up the close button in the popup
+        val closeButton: Button = popupView.findViewById(R.id.closeButton)
+        closeButton.setOnClickListener {
+            popupWindow.dismiss() // Dismiss the popup when the button is clicked
+        }
 
+        // Show the PopupWindow
+        popupWindow.isFocusable = true // Allow interaction with the popup
+        popupWindow.showAsDropDown(anchorView, 0, 0) // Show below the anchor view
+    }
 
 
     fun showAddTraceableDialog(t : Traceable): Dialog {
@@ -161,6 +188,12 @@ class MainActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+        dialog.window?.let { window ->
+            val layoutParams = window.attributes
+            window.setGravity(Gravity.CENTER)
+            layoutParams.y = -50 // Adjust this value to move the dialog up or down
+            window.attributes = layoutParams
+        }
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.setCancelable(false)
         dialog.findViewById<ImageButton>(R.id.generateCo2eButton)
@@ -180,8 +213,16 @@ class MainActivity : AppCompatActivity() {
             co2eEditText.setText(co2e)
         }
 
-        val editTextList = mutableListOf(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
-        occurrenceEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+        val editTextList = listOf<EditText>(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
+        editTextList.forEach { editText ->
+            editText.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus){
+                    editText.setSelection(editText.text.length)
+                }
+            }
+        }
+
+        materialEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
             {
                 // Handle the Enter key press here
@@ -226,31 +267,45 @@ class MainActivity : AppCompatActivity() {
                         t.category = MISC
                     }
                 }
-                co2eEditText.requestFocus()
+                amountEditText.requestFocus()
                 true
             }
             popupMenu.show()
         }
+        var fullResponse = ""
+        val showFullResponseBtn = dialog.findViewById<ImageButton>(R.id.show_full_response_button)
+        showFullResponseBtn.setOnClickListener {
+            showPopupWindow(it, fullResponse)
+        }
         val progressBar = dialog.findViewById<ProgressBar>(R.id.progressBar)
         dialog.findViewById<ImageButton>(R.id.generateCo2eButton).setOnClickListener {
+            progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
                 try {
-                    progressBar.visibility = View.VISIBLE
                     updateTraceableFromEditTextList(t, editTextList)
                     val response = withContext(Dispatchers.IO){
-                        traceableAdapter.convertToKg(
-                            traceableAdapter.removeUnwantedChars(
-                                traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t)
-                            )
-                        )
+                        traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
                     }
-                    co2eEditText.setText(response)
+                    val calculatedCO2e = traceableAdapter.convertToKg(
+                        traceableAdapter.removeUnwantedChars(
+                            response[0]!!
+                        )
+                    )
+                    fullResponse = response[1]!!
+                    co2eEditText.setText(calculatedCO2e)
                     updateTraceableFromEditTextList(t, editTextList)
-                    t.co2e = response
-                }catch (e:Exception){
-                    Toast.makeText(this@MainActivity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
-                } finally {
-                    progressBar.visibility = View.INVISIBLE
+                }catch (e: UnknownException){
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                    }
+                }catch (e : Exception){
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(this@MainActivity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                    }
+                }finally {
+                    progressBar.visibility = View.GONE
+                    showFullResponseBtn.visibility = View.VISIBLE
+
                 }
 
 

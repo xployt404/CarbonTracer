@@ -41,8 +41,9 @@
 
 
             <EditText
+                    android:backgroundTint="@color/edit_text_underline"
                 android:textSize="20sp"
-                android:inputType="text"
+                android:inputType="textNoSuggestions"
                 android:maxWidth="100dp"
                 android:minWidth="200dp"
                 android:id="@+id/nameEditText"
@@ -66,11 +67,12 @@
             <LinearLayout android:orientation="horizontal">
 
                 <EditText
+                    android:backgroundTint="@color/edit_text_underline"
                     android:textSize="20sp"
                     android:id="@+id/materialEditText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
+                    android:inputType="textNoSuggestions"
                     android:maxWidth="100dp"
                     android:maxLength="40"
                     android:minWidth="200dp"
@@ -78,59 +80,6 @@
             </LinearLayout>
 
         </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:text="Amount: "
-                android:textColor="@color/tracer_text_color" />
-
-            <LinearLayout android:orientation="horizontal">
-
-                <EditText
-                    android:textSize="20sp"
-                    android:id="@+id/amountEditText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:maxWidth="300dp"
-                    android:maxLength="30"
-                    android:minWidth="100dp"
-                    android:singleLine="true"
-                    android:textColor="@color/tracer_text_color" />
-
-            </LinearLayout>
-
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:text="Occurrence:  "
-                android:textColor="@color/tracer_text_color" />
-
-            <LinearLayout android:orientation="horizontal">
-
-                <EditText
-                    android:textSize="20sp"
-                    android:id="@+id/occurrenceEditText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:maxWidth="300dp"
-                    android:maxLength="20"
-                    android:minWidth="110dp"
-                    android:textColor="@color/tracer_text_color" />
-            </LinearLayout>
-
-        </TableRow>
-
         <TableRow>
 
             <TextView
@@ -159,6 +108,60 @@
 
             <TextView
                 android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Amount: "
+                android:textColor="@color/tracer_text_color" />
+
+            <LinearLayout android:orientation="horizontal">
+
+                <EditText
+                    android:backgroundTint="@color/edit_text_underline"
+                    android:id="@+id/amountEditText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="300dp"
+                    android:minWidth="100dp"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="30"
+                    android:singleLine="true"
+                    android:textColor="@color/tracer_text_color" /> />
+
+            </LinearLayout>
+
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Occurrence:  "
+                android:textColor="@color/tracer_text_color" />
+
+            <LinearLayout android:orientation="horizontal">
+
+                <EditText
+                    android:backgroundTint="@color/edit_text_underline"
+                    android:textSize="20sp"
+                    android:id="@+id/occurrenceEditText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="textNoSuggestions"
+                    android:maxWidth="300dp"
+                    android:maxLength="20"
+                    android:minWidth="110dp"
+                    android:textColor="@color/tracer_text_color" />
+            </LinearLayout>
+
+        </TableRow>
+
+
+        <TableRow>
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="CO2e yearly:"
@@ -167,12 +170,13 @@
             <LinearLayout android:orientation="horizontal">
 
                 <EditText
+                    android:backgroundTint="@color/edit_text_underline"
                     android:textSize="20sp"
                     android:id="@+id/co2eEditText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:inputType="text"
+                    android:layout_marginEnd="10dp"
+                    android:inputType="textNoSuggestions"
                     android:maxWidth="300dp"
                     android:maxLength="10"
                     android:minWidth="100dp"
@@ -194,7 +198,19 @@
                     android:layout_height="wrap_content"
                     android:scaleX="0.8"
                     android:scaleY="0.8"
-                    android:visibility="invisible" />
+                    android:visibility="gone" />
+
+                <ImageButton
+                    android:id="@+id/show_full_response_button"
+                    android:visibility="gone"
+                    android:scaleType="fitCenter"
+                    android:layout_marginStart="5dp"
+                    android:background="@drawable/icon_background"
+                    android:src="@android:drawable/ic_menu_help"
+                    android:layout_width="50dp"
+                    android:padding="5dp"
+                    android:layout_height="50dp"
+                    />
 
             </LinearLayout>
 
