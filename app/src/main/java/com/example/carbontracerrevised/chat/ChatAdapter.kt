@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 
 class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
@@ -48,21 +49,9 @@ class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapte
 
         fun bind(message: ChatMessage) {
             messageTextView.layoutParams as ConstraintLayout.LayoutParams
-            messageTextView.text = makeWordsBold(message.message)
+            messageTextView.text = MainActivity.makeWordsBold(message.message)
         }
-        private fun makeWordsBold(inputText: String): SpannableString {
-            val pattern = "\\*\\*(.*?)\\*\\*".toRegex()
-            val spannableString = SpannableString(inputText)
 
-            pattern.findAll(inputText).forEach { matchResult ->
-                val startIndex = matchResult.range.first
-                val endIndex = matchResult.range.last
-
-                spannableString.setSpan(StyleSpan(Typeface.BOLD), startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
-            return removeAsterisks(spannableString)
-        }
 
         private fun removeAsterisks(spannable: SpannableString): SpannableString {
             val spannableBuilder = SpannableStringBuilder(spannable)

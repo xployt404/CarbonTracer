@@ -2,9 +2,7 @@ package com.example.carbontracerrevised.chat
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.INTERNET
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.RECORD_AUDIO
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
@@ -38,7 +36,7 @@ import java.io.File
 import java.time.Instant
 
 class ChatFragment : Fragment() {
-    private val gHandler = GeminiModel()
+    private val model = GeminiModel()
     private lateinit var typingIndicatorLayout : CardView
     private var chatHistoryList : MutableList<ChatMessage> = mutableListOf()
     private lateinit var chatHistory: ChatHistory
@@ -92,7 +90,7 @@ class ChatFragment : Fragment() {
                 MotionEvent.ACTION_DOWN -> {
                     Log.i(TAG, "ACTION DOWN")
                     try {
-                        if (messageTextEdit.text.isEmpty() && !gHandler.generating){
+                        if (messageTextEdit.text.isEmpty() && !model.generating){
                             recorder.startRecording(requireContext(), lifecycleScope)
                         }else{
                             v.performClick()
@@ -107,7 +105,7 @@ class ChatFragment : Fragment() {
                     if (recorder.isRecording){
                         Log.d(TAG, "Stopping Recording")
                         recorder.stopRecording()
-                        if (!gHandler.generating){
+                        if (!model.generating){
                             sendAudio()
                         }
                         recorder.isRecording = false
@@ -127,9 +125,9 @@ class ChatFragment : Fragment() {
 
         }
         sendButton.setOnClickListener {
-            if (!gHandler.generating and messageTextEdit.text.isNotEmpty()){
+            if (!model.generating and messageTextEdit.text.isNotEmpty()){
                 sendText(messageTextEdit.text.toString())
-                messageTextEdit.setText("")
+                messageTextEdit.text = null
             }
         }
         (requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)
@@ -142,7 +140,7 @@ class ChatFragment : Fragment() {
             startTypingAnimation()
             try {
                 withContext(Dispatchers.IO){
-                    gHandler.File().sendFile(requireContext(),
+                    model.File().sendFile(requireContext(),
                         File(
                             requireContext().filesDir, "recording.ogg"
                         ).toUri(),
@@ -208,7 +206,7 @@ class ChatFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        if (gHandler.generating){
+        if (model.generating){
             startTypingAnimation()
         }else{
             stopTypingAnimation()
@@ -233,7 +231,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun sendText(msg: String) {
-        gHandler.generating = true
+        model.generating = true
         addMessage(msg, false)
         startTypingAnimation()
         scrollToBottom()
@@ -244,13 +242,13 @@ class ChatFragment : Fragment() {
             try {
                 // Switch to IO context for the network call
                 response = withContext(Dispatchers.IO) {
-                    gHandler.Text(requireContext()).sendPrompt(msg).await()
+                    model.Text(requireContext()).sendPrompt(msg).await()
                 }
-                gHandler.chatHistoryString += "output: $response\n"
+                model.chatHistoryString += "output: $response\n\n"
             } catch (e: Exception) {
                 response = "ERROR: ${e.message}"
             } finally {
-                gHandler.generating = false
+                model.generating = false
                 addMessage(response, true)
                 stopTypingAnimation()
                 Log.d("GEMINI RESPONSE", response)
@@ -273,6 +271,6 @@ class ChatFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         recorder.stopRecording()
-        gHandler.generating = false
+        model.generating = false
     }
 }

@@ -3,6 +3,7 @@ package com.example.carbontracerrevised.camera
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.INTERNET
+import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -15,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.OrientationEventListener
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -30,6 +32,7 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -60,6 +63,7 @@ class CameraFragment : Fragment() {
     private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
     private lateinit var  orientationEventListener : OrientationEventListener
     private var imageCapture : ImageCapture? = null
+    var newRotation = 0f
     var mode = TRACER
     private var flashMode = FLASH_MODE_OFF
     private var imageAnalyzeJob: Job? = null
@@ -77,18 +81,20 @@ class CameraFragment : Fragment() {
         imageView = cameraView.findViewById(R.id.imageView)
         progressBar = cameraView.findViewById(R.id.progressBar)
         captureBtn = cameraView.findViewById(R.id.captureButton)
-        flashBtn = cameraView.findViewById<ImageButton>(R.id.flashButton)
+        flashBtn = cameraView.findViewById(R.id.flashButton)
+
+
 
         // Initialize the OrientationEventListener
         orientationEventListener = object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
             override fun onOrientationChanged(orientation: Int) {
                 // Check the orientation and determine landscape side
-                when (orientation) {
+                newRotation = when (orientation) {
                     in 315..360, in 0..45 -> {
-                        (activity as MainActivity).handleCameraRotation(flashBtn, 0f)
+                        0f
                     }
                     in 46..134 -> {
-                        (activity as MainActivity).handleCameraRotation(flashBtn, -90f)
+                        -90f
                     }
 //                    in 135..225 -> {
 //                        // Landscape Left (270 degrees)
@@ -96,9 +102,19 @@ class CameraFragment : Fragment() {
 //                        (activity as MainActivity).handleCameraRotation(0f)
 //                    }
                     in 226..314 -> {
-                        (activity as MainActivity).handleCameraRotation(flashBtn, 90f)
+                        90f
                     }
+
+                    else -> {flashBtn.rotation}
                 }
+                val animator = ObjectAnimator.ofFloat(flashBtn, "rotation", flashBtn.rotation, newRotation)
+                animator.duration = 200 // Duration in milliseconds
+                animator.interpolator = LinearInterpolator()
+                animator.repeatCount = 0
+                animator.doOnEnd {
+                    flashBtn.rotation = newRotation
+                }
+                animator.start()
             }
         }
 
@@ -173,7 +189,14 @@ class CameraFragment : Fragment() {
         super.onDestroyView()
         cameraExecutor.shutdown()
     }
-
+    private fun rotateImage(source: Bitmap, angle: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(angle)
+        return Bitmap.createBitmap(
+            source, 0, 0, source.width, source.height,
+            matrix, true
+        )
+    }
     private fun takePhoto(chatHistory: ChatHistory? = null) {
         Log.i(TAG, "Photo was taken")
         imageCapture = imageCapture ?:return
@@ -184,12 +207,15 @@ class CameraFragment : Fragment() {
                 override fun onError(exc: ImageCaptureException) {
                 }
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    val bitmap = imageProxyToBitmap(image)
+                    var bitmap = imageProxyToBitmap(image)
+                    val imageRotation = -newRotation // store so scale type and orientation are coherent
+                    bitmap = rotateImage(bitmap, imageRotation)
+                    if (imageRotation == 0f)
+                        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
                     imageView.setImageBitmap(bitmap)
                     imageView.visibility = View.VISIBLE
                     captureBtn.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
                     previewView.setBackgroundColor(Color.WHITE)
-
                     imageAnalyzeJob = lifecycleScope.launch {
                         try {
                             when(mode){
@@ -238,11 +264,11 @@ class CameraFragment : Fragment() {
         super.onPause()
         progressBar.visibility = View.GONE
         stopCamera()
+        orientationEventListener.disable()
     }
 
     override fun onResume() {
         super.onResume()
-
         orientationEventListener.enable()
         if ((requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)){
             startCamera()

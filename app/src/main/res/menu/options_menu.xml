@@ -4,11 +4,6 @@
         android:id="@+id/menu_item_select_all"
         android:title="Select all" />
 
-
-    <item
-        android:id="@+id/menu_item_generate"
-        android:title="Generate" />
-
     <item
         android:id="@+id/menu_item_sort_by"
         android:title="Sort by" />
@@ -17,5 +12,5 @@
         android:title="Help" />
     <item
         android:id="@+id/menu_item_api_key"
-        android:title="Settings" />
+        android:title="Set API key" />
 </menu>

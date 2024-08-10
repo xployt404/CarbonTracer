@@ -69,7 +69,7 @@ class GeminiModel {
                 )
             )
             generating = true
-            chatHistoryString += "input: \n$prompt"
+            chatHistoryString += "input: \n$prompt\n\n"
             async(Dispatchers.IO) {
                 model.generateContent(content {
                     text(prompt)

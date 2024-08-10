@@ -6,12 +6,14 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -21,6 +23,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.ConfigFile
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
+import com.example.carbontracerrevised.tracer.TraceableAdapter.Companion.TAG
+import com.google.ai.client.generativeai.type.UnknownException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -96,9 +100,6 @@ class TracerFragment() : Fragment() {
                 R.id.menu_item_help -> {
 
                 }
-                R.id.menu_item_generate ->{
-
-                }
                 R.id.menu_item_select_all ->{
                     selectAllTraceables()
                 }
@@ -167,6 +168,37 @@ class TracerFragment() : Fragment() {
 
         return tracerFragment
     }
+    private var errorCounter = 0
+
+    private fun generateCO2ForAll() {
+        errorCounter = 0
+        for (t in traceableAdapter.selectedItems){
+            lifecycleScope.launch {
+                withContext(Dispatchers.Default) {
+                    try {
+                        val response = traceableAdapter.model.Tracer().generateCo2e(requireContext(), t, false)
+                        val calculatedCO2e = traceableAdapter.convertToKg(traceableAdapter.removeUnwantedChars(response[0]!!))
+
+                        t.co2e = calculatedCO2e
+                        traceableAdapter.traceableListObject.updateTraceable(t)
+
+                    }catch (e:Exception){
+                        errorCounter ++
+                    }finally {
+                        if (errorCounter>0){
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    activity,
+                                    "ERROR: $errorCounter were not calculated >_<",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private fun selectAllTraceables() {
         traceableAdapter.selectedItems.clear()
@@ -191,16 +223,21 @@ class TracerFragment() : Fragment() {
             dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
             // Find the EditText and Buttons
-            val editTextApiKey = dialog.findViewById<EditText>(R.id.editTextApiKey)
-            editTextApiKey.setText(ConfigFile.read(requireContext()))
+            val apiKeyEditText = dialog.findViewById<EditText>(R.id.editTextApiKey)
+            apiKeyEditText.setText(ConfigFile.getJsonAttribute(ConfigFile.read(requireContext()), "apiKey"))
             val okButton = dialog.findViewById<ImageButton>(R.id.ok_button)
             val cancelButton = dialog.findViewById<ImageButton>(R.id.cancel_button)
 
             // Set click listeners
             okButton.setOnClickListener {
-                val apiKey = editTextApiKey.text.toString()
-                onApiKeyEntered(apiKey) // Handle the API key input
-                dialog.dismiss()
+                val apiKey = apiKeyEditText.text.toString().trim()
+                if (apiKey.isEmpty()) {
+                    // Show error message
+                    apiKeyEditText.error = "This field is required"
+                } else {
+                    onApiKeyEntered(apiKey) // Handle the API key input
+                    dialog.dismiss()
+                }
             }
             cancelButton.setOnClickListener {
                 dialog.cancel()

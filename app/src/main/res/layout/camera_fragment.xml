@@ -14,8 +14,8 @@
         app:layout_constraintTop_toTopOf="parent"/>
 
     <ImageView
-
-        android:scaleType="centerCrop"
+        android:background="@color/tracer_background"
+        android:scaleType="fitCenter"
         android:visibility="invisible"
         android:id="@+id/imageView"
         android:layout_width="match_parent"

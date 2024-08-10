@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/cursor_color.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <size android:width="2dp" android:height="20dp" /> <!-- Set the width and height of the cursor -->
+    <solid android:color="#808080" /> <!-- Set your desired cursor color -->
+</shape>

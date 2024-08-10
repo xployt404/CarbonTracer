@@ -33,10 +33,10 @@ class ConfigFile {
             }
         }
 
-        fun getJsonAttribute(jsonString: String?, key: String): Any? {
+        fun getJsonAttribute(jsonString: String?, key: String): String? {
             val jsonObject = JSONObject(jsonString.toString())
             return if (jsonObject.has(key)) {
-                jsonObject.get(key) // Get the value of the attribute
+                jsonObject.get(key) as String // Get the value of the attribute
             } else {
                 null // Return null if the key does not exist
             }

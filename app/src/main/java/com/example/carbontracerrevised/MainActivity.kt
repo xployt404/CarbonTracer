@@ -11,10 +11,14 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
@@ -22,6 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -33,6 +38,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
@@ -65,6 +71,36 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
     companion object{
         const val CAMERA = 1
+        fun makeWordsBold(inputText: String): SpannableString {
+            // Regex pattern to find bold words surrounded by double asterisks
+            val pattern = "\\*\\*(.*?)\\*\\*".toRegex()
+            val spannableString = SpannableString(inputText)
+
+            // Create a mutable version of the input text to remove asterisks
+            var modifiedText = inputText
+
+            // Find all matches and apply bold styling
+            pattern.findAll(inputText).forEach { matchResult ->
+                val startIndex = matchResult.range.first
+                val endIndex = matchResult.range.last + 1 // +1 to include the last asterisk
+
+                // Set the bold span
+                spannableString.setSpan(StyleSpan(Typeface.BOLD), startIndex, endIndex - 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                // Remove the asterisks from the modified text
+                modifiedText = modifiedText.replace(matchResult.value, matchResult.groupValues[1])
+            }
+
+            // Return the spannable string with asterisks removed
+            return SpannableString(modifiedText).apply {
+                // Reapply the bold spans to the modified text
+                pattern.findAll(modifiedText).forEach { matchResult ->
+                    val startIndex = matchResult.range.first
+                    val endIndex = startIndex + matchResult.groupValues[1].length // Adjust end index for the bold span
+                    setSpan(StyleSpan(Typeface.BOLD), startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            }
+        }
 
     }
 
@@ -178,7 +214,7 @@ class MainActivity : AppCompatActivity() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT)
 
-        popupView.findViewById<TextView>(R.id.popupText).text = fullResponse
+        popupView.findViewById<TextView>(R.id.popupText).text = makeWordsBold(fullResponse)
         // Set up the close button in the popup
         val closeButton: Button = popupView.findViewById(R.id.closeButton)
         closeButton.setOnClickListener {
@@ -187,7 +223,8 @@ class MainActivity : AppCompatActivity() {
 
         // Show the PopupWindow
         popupWindow.isFocusable = true // Allow interaction with the popup
-        popupWindow.showAsDropDown(anchorView, 0, 0) // Show below the anchor view
+        popupWindow.showAtLocation(anchorView,
+            Gravity.CENTER, 0, 0)
     }
 
 
@@ -289,11 +326,12 @@ class MainActivity : AppCompatActivity() {
         }
         val progressBar = dialog.findViewById<ProgressBar>(R.id.progressBar)
         dialog.findViewById<ImageButton>(R.id.generateCo2eButton).setOnClickListener {
+            showFullResponseBtn.visibility = View.GONE
             progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
                 try {
                     updateTraceableFromEditTextList(t, editTextList)
-                    val response = withContext(Dispatchers.IO){
+                    val response = withContext(Dispatchers.Default){
                         traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
                     }
                     val calculatedCO2e = traceableAdapter.convertToKg(
@@ -394,21 +432,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return true
-    }
-
-    fun handleCameraRotation(flashBtn : ImageButton, newRotation: Float) {
-
-        val animatorSet = AnimatorSet()
-        val animators : List<ObjectAnimator> = (tabLayout.children + flashBtn).map { view ->
-            ObjectAnimator.ofFloat(view, "rotation", view.rotation, newRotation).apply {
-                duration = 1000 // Duration in milliseconds
-            }
-        }.toList()
-        // Play all animations together
-        animatorSet.playTogether(*animators.toTypedArray())
-
-        // Start the animation
-        animatorSet.start()
     }
 
 }

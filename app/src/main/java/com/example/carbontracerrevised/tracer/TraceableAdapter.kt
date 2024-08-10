@@ -43,7 +43,7 @@ import java.net.UnknownHostException
 
 
 class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
-    private lateinit var traceableListObject: TraceableList
+    lateinit var traceableListObject: TraceableList
     var previousLastIndex = 0
     var selectModeEnabled = false
     val selectedItems = mutableListOf<Traceable>()
@@ -188,6 +188,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         }
         holder.generateCo2eButton.setOnClickListener {
             // Use lifecycleScope to ensure proper lifecycle management
+            holder.showFullResponseBtn.visibility = View.GONE
             holder.progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
                 withContext(Dispatchers.Default) {
