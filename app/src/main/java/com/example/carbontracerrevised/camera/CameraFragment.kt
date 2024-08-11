@@ -4,7 +4,6 @@ package com.example.carbontracerrevised.camera
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.INTERNET
 import android.animation.ObjectAnimator
-import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -42,7 +41,6 @@ import com.example.carbontracerrevised.R
 import com.example.carbontracerrevised.chat.ChatHistory
 import com.example.carbontracerrevised.tracer.Traceable
 import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -220,10 +218,10 @@ class CameraFragment : Fragment() {
                         try {
                             when(mode){
                                 CHAT -> {
-                                    val textResponse = model.Text(requireContext()).sendPrompt(
+                                    val chatResponse = model.Chat(requireContext()).sendPrompt(
                                         objectInfo
                                     ).await()
-                                    chatHistory?.insertChatMessage(true, textResponse, "")
+                                    chatHistory?.insertChatMessage(true, chatResponse, "")
                                 }
                                 TRACER -> {
                                     objectInfo = withContext(Dispatchers.IO) {

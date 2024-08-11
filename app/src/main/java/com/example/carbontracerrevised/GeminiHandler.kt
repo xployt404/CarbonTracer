@@ -4,26 +4,21 @@ package com.example.carbontracerrevised
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.Nullable
 import com.example.carbontracerrevised.chat.ChatHistory
 import com.example.carbontracerrevised.tracer.Traceable
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
@@ -36,7 +31,7 @@ class GeminiModel {
     }
 
 
-    inner class Text(private val context: Context, private val modelName: String = "gemini-1.5-pro") {
+    inner class Chat(private val context: Context, private val modelName: String = "gemini-1.5-pro") {
         private lateinit var model: GenerativeModel
         private var apiKey: String = ""
 
@@ -277,9 +272,8 @@ class GeminiModel {
             generating = true
             val model = GenerativeModel(
                 "gemini-1.5-pro",
-                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
-                // Retrieve API key as an environmental variable defined in a Build Configuration
-                // see https://github.com/google/secrets-gradle-plugin for further instructions
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString() // Retrieve API key
+
                 , systemInstruction = content {
                     text("You are an AI that assists in making more eco-friendly choices." +
                             "Assume the of CO2 emitted by certain objects based on your available data."  +
@@ -318,10 +312,10 @@ class GeminiModel {
                 text("output:" )
             }
             val response = withContext(Dispatchers.IO){
-                    model.generateContent(
-                        content
-                    )
-                }
+                model.generateContent(
+                    content
+                )
+            }
 
 
             // Get the first text part of the first candidate

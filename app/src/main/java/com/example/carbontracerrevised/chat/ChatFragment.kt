@@ -242,7 +242,7 @@ class ChatFragment : Fragment() {
             try {
                 // Switch to IO context for the network call
                 response = withContext(Dispatchers.IO) {
-                    model.Text(requireContext()).sendPrompt(msg).await()
+                    model.Chat(requireContext()).sendPrompt(msg).await()
                 }
                 model.chatHistoryString += "output: $response\n\n"
             } catch (e: Exception) {
