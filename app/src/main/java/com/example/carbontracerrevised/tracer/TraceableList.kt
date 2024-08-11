@@ -23,7 +23,7 @@ class TraceableList private constructor(context: Context) {
         withContext(Dispatchers.IO) {
             val db = dbHelper.writableDatabase
             val values = ContentValues().apply {
-                put(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME, traceable.objectName)
+                put(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME, traceable.name)
                 put(TracerContract.Traceable.COLUMN_NAME_MATERIAL, traceable.material)
                 put(TracerContract.Traceable.COLUMN_NAME_AMOUNT, traceable.amount)
                 put(TracerContract.Traceable.COLUMN_NAME_OCCURRENCE, traceable.occurrence)
@@ -94,7 +94,7 @@ class TraceableList private constructor(context: Context) {
         withContext(Dispatchers.IO) {
             val db = dbHelper.writableDatabase
             val values = ContentValues().apply {
-                put(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME, traceable.objectName)
+                put(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME, traceable.name)
                 put(TracerContract.Traceable.COLUMN_NAME_MATERIAL, traceable.material)
                 put(TracerContract.Traceable.COLUMN_NAME_AMOUNT, traceable.amount)
                 put(TracerContract.Traceable.COLUMN_NAME_OCCURRENCE, traceable.occurrence)

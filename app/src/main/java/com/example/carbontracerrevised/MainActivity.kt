@@ -1,32 +1,26 @@
 package com.example.carbontracerrevised
 
-import android.animation.Animator
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
-import android.text.Spannable
+import android.text.Html
 import android.text.SpannableString
+import android.text.Spanned
 import android.text.style.StyleSpan
-import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -38,9 +32,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.carbontracerrevised.camera.CameraFragment
@@ -54,52 +46,31 @@ import com.example.carbontracerrevised.tracer.MISC
 import com.example.carbontracerrevised.tracer.TRANSPORT
 import com.example.carbontracerrevised.tracer.Traceable
 import com.example.carbontracerrevised.tracer.TraceableAdapter
-import com.example.carbontracerrevised.tracer.TraceableAdapter.Companion.TAG
 import com.example.carbontracerrevised.tracer.TraceableList
 import com.example.carbontracerrevised.tracer.TracerFragment
 import com.google.ai.client.generativeai.type.UnknownException
 import com.google.android.material.tabs.TabLayout
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import java.io.File
-import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
     companion object{
         const val CAMERA = 1
-        fun makeWordsBold(inputText: String): SpannableString {
-            // Regex pattern to find bold words surrounded by double asterisks
-            val pattern = "\\*\\*(.*?)\\*\\*".toRegex()
-            val spannableString = SpannableString(inputText)
+        fun makeWordsBold(input: String): Spanned {
+            // Create a SpannableString from the input
+            // Find the start and end indices of the text enclosed in double asterisks
+            val regex = "\\*\\*(.*?)\\*\\*".toRegex()
+            val formattedText = regex.replace(input.replace("\n", "<br>")) { matchResult ->
+                "<b>${matchResult.groupValues[1]}</b>"
 
-            // Create a mutable version of the input text to remove asterisks
-            var modifiedText = inputText
-
-            // Find all matches and apply bold styling
-            pattern.findAll(inputText).forEach { matchResult ->
-                val startIndex = matchResult.range.first
-                val endIndex = matchResult.range.last + 1 // +1 to include the last asterisk
-
-                // Set the bold span
-                spannableString.setSpan(StyleSpan(Typeface.BOLD), startIndex, endIndex - 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-                // Remove the asterisks from the modified text
-                modifiedText = modifiedText.replace(matchResult.value, matchResult.groupValues[1])
             }
 
-            // Return the spannable string with asterisks removed
-            return SpannableString(modifiedText).apply {
-                // Reapply the bold spans to the modified text
-                pattern.findAll(modifiedText).forEach { matchResult ->
-                    val startIndex = matchResult.range.first
-                    val endIndex = startIndex + matchResult.groupValues[1].length // Adjust end index for the bold span
-                    setSpan(StyleSpan(Typeface.BOLD), startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
+
+
+            return Html.fromHtml(formattedText,Html.FROM_HTML_MODE_LEGACY)
         }
 
     }
@@ -108,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var traceableListObject: TraceableList
     private lateinit var traceableAdapter : TraceableAdapter
     private var lastPage = CAMERA
-    private lateinit var viewPager: ViewPager2
+    lateinit var viewPager: ViewPager2
     private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var tabLayout: TabLayout
 
@@ -216,7 +187,7 @@ class MainActivity : AppCompatActivity() {
 
         popupView.findViewById<TextView>(R.id.popupText).text = makeWordsBold(fullResponse)
         // Set up the close button in the popup
-        val closeButton: Button = popupView.findViewById(R.id.closeButton)
+        val closeButton: ImageButton = popupView.findViewById(R.id.closeButton)
         closeButton.setOnClickListener {
             popupWindow.dismiss() // Dismiss the popup when the button is clicked
         }
@@ -253,7 +224,7 @@ class MainActivity : AppCompatActivity() {
         val co2eEditText = dialog.findViewById<EditText>(R.id.co2eEditText)
 
         with(t) {
-            nameEditText.setText(objectName)
+            nameEditText.setText(name)
             occurrenceEditText.setText(occurrence)
             amountEditText.setText(amount)
             materialEditText.setText(material)
@@ -331,7 +302,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     updateTraceableFromEditTextList(t, editTextList)
-                    val response = withContext(Dispatchers.Default){
+                    val response = withContext(Dispatchers.IO){
                         traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
                     }
                     val calculatedCO2e = traceableAdapter.convertToKg(

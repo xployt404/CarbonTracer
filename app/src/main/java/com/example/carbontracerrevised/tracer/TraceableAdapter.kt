@@ -8,8 +8,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.graphics.drawable.ColorDrawable
-import android.os.Looper
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
@@ -39,10 +37,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.UnknownHostException
 
 
 class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
+    lateinit var tracerTitleTextView: TextView
     lateinit var traceableListObject: TraceableList
     var previousLastIndex = 0
     var selectModeEnabled = false
@@ -258,11 +256,13 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             optionsAndClearBtn.setImageResource(android.R.drawable.ic_menu_delete)
             rotateView(addAndUnselectBtn, 0F)
             selectAllBtn.visibility = View.VISIBLE
+            tracerTitleTextView.visibility = View.GONE
             selectModeEnabled = true
         }else{
             optionsAndClearBtn.setImageResource(R.drawable.ic_three_dots)
             rotateView(addAndUnselectBtn, 45F)
-            selectAllBtn.visibility = View.INVISIBLE
+            selectAllBtn.visibility = View.GONE
+            tracerTitleTextView.visibility = View.VISIBLE
             selectModeEnabled = false
         }
     }
@@ -328,7 +328,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         fun bind(traceable: Traceable) {
             Log.d(TAG, "bind: bind")
             with(traceable) {
-                nameEditText.setText(traceable.objectName)
+                nameEditText.setText(traceable.name)
                 materialEditText.setText(traceable.material)
                 amountEditText.setText(traceable.amount)
                 occurrenceEditText.setText(traceable.occurrence)
@@ -399,7 +399,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         return withContext(Dispatchers.Default){
             when(criteria){
                 TracerFragment.SORT_BY_NAME->{
-                    list.sortedBy { it.objectName }
+                    list.sortedBy { it.name }
                 }
                 TracerFragment.SORT_BY_CATEGORY -> {
                     list.sortedBy { it.category }
@@ -419,12 +419,24 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         }
     }
 
+    fun tracerListString(): String {
+        var tracerListString = ""
+        for (t in traceableList){
+            tracerListString += "name: ${t.name}\n" +
+                    "material: ${t.material}\n" +
+                    "amount: ${t.amount}\n" +
+                    "occurrence: ${t.occurrence}\n"
+            "co2e yearly: ${t.occurrence}\n\n"
+        }
+        return tracerListString
+    }
+
 
     companion object {
         const val TAG = "TraceableAdapter"
         val categories =
             listOf("Groceries", "Consumer Products", "Electronics", "Transport", "Misc")
-        val propertyNames = listOf("objectName", "material", "amount", "occurrence", "co2e")
+        val propertyNames = listOf("name", "material", "amount", "occurrence", "co2e")
     }
 
 }

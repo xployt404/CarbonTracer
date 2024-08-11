@@ -1,17 +1,12 @@
 package com.example.carbontracerrevised.statistics
 
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
-import android.text.Html
-import android.text.Html.FROM_HTML_MODE_LEGACY
-import android.text.Spanned
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.MainActivity
@@ -36,7 +31,6 @@ import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -240,7 +234,7 @@ class StatisticsFragment : Fragment() {
             val barDataSet = BarDataSet(barEntries, "Data Set")
             barDataSet.colors = ColorTemplate.LIBERTY_COLORS.toList()
             barData = BarData(barDataSet)
-            labels = sortedTraceables.map { it.objectName }
+            labels = sortedTraceables.map { it.name }
         }
         withContext(Dispatchers.Main){
             barChart.apply {

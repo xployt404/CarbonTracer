@@ -13,21 +13,36 @@
     android:scrollbars="vertical"
     >
 
-    <ImageButton
-        android:id="@+id/sendButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="10dp"
-        android:background="@drawable/btn_background"
-        android:contentDescription="Record audio or Send message"
-        android:padding="12dp"
-        android:src="@drawable/ic_mic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
+
+
+        <ImageButton
+            android:elevation="20dp"
+            android:id="@+id/sendButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/btn_background"
+            android:contentDescription="Record audio or Send message"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:src="@drawable/ic_mic"
+             />
+
+        <View
+            android:elevation="15dp"
+            android:id="@+id/glowView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/glow_effect"
+            android:visibility="invisible"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
     <FrameLayout
-        android:id="@id/messageEditTextFrame"
+        android:id="@+id/messageEditTextFrame"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -39,7 +54,7 @@
         android:maxHeight="200dp"
         android:minHeight="50dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sendButton"
+        app:layout_constraintEnd_toStartOf="@+id/glowView"
         app:layout_constraintStart_toStartOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -75,7 +90,7 @@
         android:background="@drawable/tab_layout_background"
         android:clipToPadding="false"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/messageEditTextFrame"
+        app:layout_constraintBottom_toTopOf="@+id/typingIndicatorCardView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/clear_chat_button" />
@@ -89,8 +104,8 @@
         android:visibility="gone"
         app:cardCornerRadius="20dp"
 
-        app:layout_constraintBottom_toBottomOf="@id/chatHistory"
-        app:layout_constraintLeft_toLeftOf="@id/chatHistory">
+        app:layout_constraintBottom_toTopOf="@id/messageEditTextFrame"
+        app:layout_constraintLeft_toLeftOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -143,9 +158,26 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:background="#00FFFFFF"
+        android:contentDescription="TODO"
         android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@android:drawable/ic_menu_delete"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/chatHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chat with Gemini"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:fontFamily="serif-monospace"
+        android:background="#00FFFFFF"
+        android:padding="8dp"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintEnd_toStartOf="@+id/clear_chat_button"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

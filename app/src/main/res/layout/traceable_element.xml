@@ -262,6 +262,7 @@
 
                 <ImageButton
                     android:id="@+id/show_full_response_button"
+                    android:contentDescription="TODO"
                     android:visibility="invisible"
                     android:scaleType="fitCenter"
                     android:layout_marginStart="5dp"

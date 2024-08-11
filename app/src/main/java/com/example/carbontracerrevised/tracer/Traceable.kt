@@ -8,7 +8,7 @@ const val MISC = 4
 
 class Traceable (
     var id : Int,
-    var objectName: String,
+    var name: String,
     var material: String,
     var amount: String,
     var occurrence: String,

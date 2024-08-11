@@ -1,12 +1,8 @@
 package com.example.carbontracerrevised.tracer
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
-import android.text.InputType
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,17 +19,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.ConfigFile
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
-import com.example.carbontracerrevised.tracer.TraceableAdapter.Companion.TAG
+import com.example.carbontracerrevised.chat.ChatHistory
 import com.google.ai.client.generativeai.type.UnknownException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-class TracerFragment() : Fragment() {
+class TracerFragment : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
     private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var recyclerView: RecyclerView
+    private lateinit var chatHistory : ChatHistory
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,13 +40,15 @@ class TracerFragment() : Fragment() {
         val tracerFragment = inflater.inflate(R.layout.tracer_fragment, container, false)
         recyclerView = tracerFragment.findViewById(R.id.traceableRecycler)
         recyclerView.layoutManager = LinearLayoutManager(context)
+        chatHistory = ChatHistory(requireContext())
         recyclerView.adapter = traceableAdapter
         val optionsAndClearBtn = tracerFragment.findViewById<ImageButton>(R.id.options_and_clear_button)
         val addAndUnselectBtn = tracerFragment.findViewById<ImageButton>(R.id.add_and_unselect_button)
-        val selectAllBtn = tracerFragment.findViewById<Button>(R.id.select_all_button)
+        val selectAllBtn = tracerFragment.findViewById<Button>(R.id.selectAllButton)
         traceableAdapter.optionsAndClearBtn = optionsAndClearBtn
         traceableAdapter.addAndUnselectBtn = addAndUnselectBtn
         traceableAdapter.selectAllBtn = selectAllBtn
+        traceableAdapter.tracerTitleTextView = tracerFragment.findViewById(R.id.tracerTitle)
 
         val sortingPopMenu = PopupMenu(requireContext(), optionsAndClearBtn)
 
@@ -58,19 +57,19 @@ class TracerFragment() : Fragment() {
         sortingPopMenu.setOnMenuItemClickListener { menuItem ->
             lifecycleScope.launch {
                 val sortedTraceables =  when(menuItem.itemId){
-                        R.id.menu_item_sort_by_name -> {
-                            traceableAdapter.sortTraceablesBy(SORT_BY_NAME)
-                        }
-                        R.id.menu_item_sort_by_category -> {
-                            traceableAdapter.sortTraceablesBy(SORT_BY_CATEGORY)
-                        }
-                        R.id.menu_item_sort_by_co2e -> {
-                            traceableAdapter.sortTraceablesBy(SORT_BY_CO2E)
-                        }
-                        else -> {
-                            traceableAdapter.traceableList
-                        }
+                    R.id.menu_item_sort_by_name -> {
+                        traceableAdapter.sortTraceablesBy(SORT_BY_NAME)
                     }
+                    R.id.menu_item_sort_by_category -> {
+                        traceableAdapter.sortTraceablesBy(SORT_BY_CATEGORY)
+                    }
+                    R.id.menu_item_sort_by_co2e -> {
+                        traceableAdapter.sortTraceablesBy(SORT_BY_CO2E)
+                    }
+                    else -> {
+                        traceableAdapter.traceableList
+                    }
+                }
                 lifecycleScope.launch {
                     try {
                         withContext(Dispatchers.Default) {
@@ -98,6 +97,35 @@ class TracerFragment() : Fragment() {
             when(menuItem.itemId){
                 //TODO: implement all
                 R.id.menu_item_help -> {
+
+                }
+                R.id.menu_item_footprint -> {
+                    lifecycleScope.launch {
+                        try {
+                            withContext(Dispatchers.IO){
+
+                                chatHistory.insertChatMessage(
+                                    true,
+                                    traceableAdapter.model.Tracer().evaluateFootprint(
+                                        requireContext(),
+                                        traceableAdapter.tracerListString()
+                                    ),
+                                    "")
+                            }
+                            withContext(Dispatchers.Main){
+                                (activity as MainActivity).viewPager.currentItem = 0
+                            }
+                        }catch (e: UnknownException){
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                            }
+                        }catch (e : Exception){
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(requireContext(), "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+
 
                 }
                 R.id.menu_item_select_all ->{

@@ -31,8 +31,9 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:background="#00FFFFFF"
+                android:contentDescription="TODO"
                 android:padding="8dp"
-                android:layout_marginRight="8dp"
+                android:layout_marginEnd="8dp"
                 android:rotation="45"
                 android:scaleType="fitCenter"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
@@ -42,6 +43,7 @@
                 app:layout_constraintVertical_bias="0.0" />
 
             <ImageButton
+                android:contentDescription="TODO"
                 android:padding="8dp"
                 android:id="@+id/options_and_clear_button"
                 android:layout_width="50dp"
@@ -54,14 +56,28 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:visibility="invisible"
-                android:layout_marginLeft="8dp"
-                android:id="@+id/select_all_button"
+            <TextView
+                android:textStyle="bold"
+                android:visibility="visible"
+                android:layout_marginStart="8dp"
+                android:id="@+id/tracerTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxWidth="300dp"
-                android:minWidth="110dp"
+                android:text="Tracer"
+                android:textSize="30sp"
+                android:fontFamily="serif-monospace"
+                android:backgroundTint="#C5E1A5"
+                android:textColor="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:visibility="gone"
+                android:layout_marginStart="8dp"
+                android:id="@+id/selectAllButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Select All"
                 android:backgroundTint="#C5E1A5"
                 android:textColor="@color/tracer_text_color"

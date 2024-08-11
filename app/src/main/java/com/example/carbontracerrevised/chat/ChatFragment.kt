@@ -44,6 +44,9 @@ class ChatFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var recorder : AudioRecorder
     private lateinit var chatDbList : MutableList<ChatMessage>
+    private lateinit var glowView: View
+    private lateinit var sendButton: ImageButton
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val chatFragmentView = inflater.inflate(R.layout.chat_fragment, container, false)
@@ -56,13 +59,16 @@ class ChatFragment : Fragment() {
         typingIndicatorLayout = chatFragmentView.findViewById(R.id.typingIndicatorCardView)
         chatHistory = ChatHistory(requireContext())
         val clearChatBtn = chatFragmentView.findViewById<ImageButton>(R.id.clear_chat_button)
+        glowView = chatFragmentView.findViewById(R.id.glowView)
         clearChatBtn.setOnClickListener {
             lifecycleScope.launch {
                 chatHistory.clearChartHistory()
                 updateChatHistory()
             }
         }
-
+        messageTextEdit.setOnClickListener {
+            scrollToBottom()
+        }
         messageTextEdit.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // Not needed for this case
@@ -84,13 +90,15 @@ class ChatFragment : Fragment() {
             }
         })
 
-        val sendButton = chatFragmentView.findViewById<ImageButton>(R.id.sendButton)
+
+        sendButton = chatFragmentView.findViewById<ImageButton>(R.id.sendButton)
         sendButton.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     Log.i(TAG, "ACTION DOWN")
                     try {
                         if (messageTextEdit.text.isEmpty() && !model.generating){
+                            startPulsatingGlow()
                             recorder.startRecording(requireContext(), lifecycleScope)
                         }else{
                             v.performClick()
@@ -102,8 +110,10 @@ class ChatFragment : Fragment() {
                 }
                 MotionEvent.ACTION_UP -> {
                     Log.d(TAG, "Action Up")
+                    scrollToBottom()
                     if (recorder.isRecording){
                         Log.d(TAG, "Stopping Recording")
+                        stopPulsatingGlow()
                         recorder.stopRecording()
                         if (!model.generating){
                             sendAudio()
@@ -114,6 +124,8 @@ class ChatFragment : Fragment() {
                 }
                 MotionEvent.ACTION_CANCEL -> {
                     Log.d(TAG, "Action was CANCEL")
+                    recorder.stopRecording()
+                    stopPulsatingGlow()
                     true
                 }
                 MotionEvent.ACTION_OUTSIDE -> {
@@ -272,5 +284,25 @@ class ChatFragment : Fragment() {
         super.onDestroy()
         recorder.stopRecording()
         model.generating = false
+    }
+    private fun startPulsatingGlow() {
+        glowView.visibility = View.VISIBLE
+        val scaleX = ObjectAnimator.ofFloat(glowView, "scaleX", 1f, 1.6f, 1f)
+        val scaleY = ObjectAnimator.ofFloat(glowView, "scaleY", 1f, 1.6f, 1f)
+        scaleX.duration = 1500
+        scaleY.duration = 1500
+        scaleX.repeatCount = ObjectAnimator.INFINITE
+        scaleY.repeatCount = ObjectAnimator.INFINITE
+        scaleX.repeatMode = ObjectAnimator.REVERSE
+        scaleY.repeatMode = ObjectAnimator.REVERSE
+
+        val animatorSet = AnimatorSet()
+        animatorSet.play(scaleX).with(scaleY)
+        animatorSet.start()
+    }
+
+    private fun stopPulsatingGlow() {
+        glowView.visibility = View.INVISIBLE
+        glowView.clearAnimation() // Stop any ongoing animations
     }
 }

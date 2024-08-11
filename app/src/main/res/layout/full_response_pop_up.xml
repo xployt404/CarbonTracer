@@ -4,20 +4,23 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@android:color/white">
+    android:background="@drawable/header_background"
+    android:backgroundTint="#C5E1A5">
 
     <TextView
         android:id="@+id/popupText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="This is a PopupWindow!" />
+        android:text="This is a PopupWindow!"
+        android:textColor="@color/black"/>
 
-    <Button
+    <ImageButton
         android:id="@+id/closeButton"
-        android:background="@drawable/edit_text_background"
+        android:background="@drawable/header_background"
         android:backgroundTint="#FF5E5E"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_gravity="end"
         android:text="Close" />
 </LinearLayout>

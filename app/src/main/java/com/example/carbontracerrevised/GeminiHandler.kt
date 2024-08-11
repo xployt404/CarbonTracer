@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import com.example.carbontracerrevised.chat.ChatHistory
 import com.example.carbontracerrevised.tracer.Traceable
 import com.google.ai.client.generativeai.GenerativeModel
@@ -67,7 +66,7 @@ class GeminiModel {
             chatHistoryString += "input: \n$prompt\n\n"
             async(Dispatchers.IO) {
                 model.generateContent(content {
-                    text(prompt)
+                    text(chatHistoryString)
 
                 }).text!!
             }
@@ -75,66 +74,6 @@ class GeminiModel {
 
     }
 
-    inner class Vision {
-        suspend fun sendImage(context : Context, images : List<Bitmap>) : String? {
-            generating = true
-            val model = GenerativeModel(
-                "gemini-1.0-pro-vision-latest",
-                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
-                // Retrieve API key as an environmental variable defined in a Build Configuration
-                // see https://github.com/google/secrets-gradle-plugin for further instructions
-                ,
-                generationConfig = generationConfig {
-                    temperature = 0.4f
-                    topK = 32
-                    topP = 1f
-                    maxOutputTokens = 4096
-                },
-                safetySettings = listOf(
-                    SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                    SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
-                    SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
-                    SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
-                ),
-            )
-
-
-            if (images.any { false }) {
-                throw RuntimeException("Image(s) not found in resources")
-            }
-            /*
-            "You are an assistant that assist in making more eco friendly choices. " +
-                            "You are given an image containing one or multiple objects. " +
-                            "What is this object? Define how this object or something related to it is connected to Carbon Emissions." +
-                            "Give explanations to the user about the mentioned subject or matter too. " +
-                            "If you can, quantify how much environmental harm this object produces e.g. in CO2e by giving explanatory calculations and provide preferable official sources and links if possible." +
-                            "If you are unable to make out the object tell the user. Answer in ${R.string.language}."
-             */
-
-            val content = content {
-                text("input: " +
-                        "You are an assistant that assist in making more eco friendly choices. " +
-                        "Your answer will be processed by another AI that assesses the environmental harm of that object." +
-                        "You are given an image containing one or multiple objects. " +
-                        "What is the most prominently shown object? " +
-                        "Answer with a word group or single word as specific as you can. " +
-                        "Answer in lower case without punctuation.")
-
-                image(images[0])
-                text("output: ")
-            }
-            val response = model.generateContent(
-                content
-            )
-
-            generating = false
-            Toast.makeText(context, "finished", Toast.LENGTH_SHORT).show()
-
-            // Alternatively
-            print(response.candidates.first().content.parts.first().asTextOrNull())
-            return response.text
-        }
-    }
     inner class File {
         suspend fun sendFile(context : Context, fileUri: Uri, chatHistory: ChatHistory? = null){
             generating = true
@@ -149,7 +88,7 @@ class GeminiModel {
                         "You are an assistant that assists in making more eco-friendly choices. " +
                                 "Your purpose is to answer questions regarding ecological sustainability. " +
                                 "You are given an audio file that contains a recording which contains the request of the user. " +
-                                "Your response contains the spoken words you heard and your answer to the request stated in the audio." +
+                                "Your response contains the spoken words you heard in the audio file and your answer to the request stated in the audio." +
                                 "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
                                 "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
                                 "You can Answer to short greetings etc."+
@@ -188,11 +127,21 @@ class GeminiModel {
 
             // Extracting spoken_words
             val spokenWords = Regex("spoken_words: (.+?)\\n").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
-            chatHistory?.insertChatMessage(false, spokenWords, Instant.now().toEpochMilli().toString())
+            if (spokenWords.isNotEmpty()){
+                chatHistory?.insertChatMessage(false, spokenWords, Instant.now().toEpochMilli().toString())
+            }
+
+            chatHistoryString += "input: $spokenWords\n\n"
+
+            withContext(Dispatchers.IO) {
+                Thread.sleep(1500)
+            }
 
             // Extracting answer
             val answer =  Regex("answer: (.+)").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
             chatHistory?.insertChatMessage(true, answer, Instant.now().toEpochMilli().toString())
+
+            chatHistoryString += "input: $answer\n\n"
 
             generating = false
             // Alternatively
@@ -277,7 +226,7 @@ class GeminiModel {
                 , systemInstruction = content {
                     text("You are an AI that assists in making more eco-friendly choices." +
                             "Assume the of CO2 emitted by certain objects based on your available data."  +
-                            "The objectName is the name of the object to be evaluated." +
+                            "The name is the name of the object to be evaluated." +
                             "The amount represents, in what capacity that object is used. " +
                             "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
                             "The occurrence represents the frequency of usage." +
@@ -303,7 +252,7 @@ class GeminiModel {
             println(traceable)
             val content = content {
                 text("input: ")
-                text("objectName: ${traceable.objectName}\n" +
+                text("name: ${traceable.name}\n" +
                         "material: ${traceable.material}\n" +
                         "amount: ${traceable.amount}\n" +
                         "occurrence: ${traceable.occurrence}")
@@ -332,6 +281,60 @@ class GeminiModel {
                 listOf(splitResponse.last(), response.text)
             }
 
+        }
+
+        suspend fun evaluateFootprint(context: Context, tracerListString: String): String {
+            generating = true
+            val chatHistory = ChatHistory(context)
+            val model = GenerativeModel(
+                "gemini-1.5-pro",
+                apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString() // Retrieve API key
+
+                , systemInstruction = content {
+                    text("You are an AI that assists in making more eco-friendly choices." +
+                            "The CO2e of multiple objects and activities of a person were evaluated and you are given the list of them." +
+                            "Your Task is to evaluate the Carbon footprint of this person and compare it to the average. Give recommendations, how the user could improve his footprint and go into detail about" +
+                            " the objects or activities that you think should be emphasized."  +
+                            "The name is the name of the object/activity to be evaluated." +
+                            "The amount represents, in what capacity that object is used. " +
+                            "The CO2e yearly is the yearly CO2e. " +
+                            "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
+                            "The occurrence represents the frequency of usage." +
+                            "If the object is a washing machine for instance, the electricity usage is relevant and not the manufacturing and transport emissions." +
+                            "For products that are disposed after usage and have to be bought frequently its the other way around of course."
+                    )
+                },
+                generationConfig = generationConfig {
+                    temperature = 0.2f
+                    topK = 32
+                    topP = 1f
+                    maxOutputTokens = 800
+                },
+                safetySettings = listOf(
+                    SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
+                    SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
+                ),
+            )
+            val content = content {
+                text("input: ")
+                text(tracerListString)
+
+
+                text("output: " )
+            }
+            val response = withContext(Dispatchers.IO){
+                model.generateContent(
+                    content
+                )
+            }
+
+
+            // Get the first text part of the first candidate
+            generating = false
+
+           return response.text!!
         }
 
 

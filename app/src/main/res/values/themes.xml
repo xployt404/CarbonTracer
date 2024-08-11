@@ -1,11 +1,6 @@
 <!-- res/values/styles.xml -->
 <resources>
     <style name="Base.Theme.CarbonTracer" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <!-- Transparent Action Bar theme -->
@@ -14,6 +9,7 @@
         <item name="windowActionBarOverlay">true</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="colorAccent">@color/white</item>
+        <item name="android:textCursorDrawable">@drawable/indicator</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 </resources>

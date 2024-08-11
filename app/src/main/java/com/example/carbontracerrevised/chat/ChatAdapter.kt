@@ -51,22 +51,5 @@ class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapte
             messageTextView.layoutParams as ConstraintLayout.LayoutParams
             messageTextView.text = MainActivity.makeWordsBold(message.message)
         }
-
-
-        private fun removeAsterisks(spannable: SpannableString): SpannableString {
-            val spannableBuilder = SpannableStringBuilder(spannable)
-
-            var index = 0
-            while (index < spannableBuilder.length) {
-                if (spannableBuilder[index] == '*') {
-                    spannableBuilder.delete(index, index + 1)
-                } else {
-                    index++
-                }
-            }
-
-            return SpannableString.valueOf(spannableBuilder)
-
-        }
     }
 }

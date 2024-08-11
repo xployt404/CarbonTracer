@@ -7,6 +7,10 @@
     <item
         android:id="@+id/menu_item_sort_by"
         android:title="Sort by" />
+
+    <item
+        android:id="@+id/menu_item_footprint"
+        android:title="Evaluate Footprint" />
     <item
         android:id="@+id/menu_item_help"
         android:title="Help" />
