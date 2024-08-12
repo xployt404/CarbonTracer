@@ -85,21 +85,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        //TODO: Remove
-        StrictMode.setThreadPolicy(
-            ThreadPolicy.Builder()
-                .penaltyDeath()
-                .penaltyLog()
-                .detectAll()
-                .build()
-        )
-        StrictMode.setVmPolicy(
-            VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .build()
-        )
+
         // Initialize the permission request launcher
         requestMultiplePermissionsLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -136,7 +122,6 @@ class MainActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 // This method will be invoked when a tab is selected
                 viewPager.currentItem = tab.position
-                // React to tab selection
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {

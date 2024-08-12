@@ -19,7 +19,7 @@
             android:layout_marginBottom="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="How to use CarbonTracer?"
+            android:text="@string/how_to_use_carbontracer"
             android:textColor="#FFFFFF"
             android:textAlignment="center"
             android:textSize="40sp"
@@ -49,7 +49,7 @@
             android:layout_marginTop="40dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
-            android:text="What the Tracer is:"
+            android:text="@string/what_the_tracer_is"
             android:textAlignment="textStart"
             android:textColor="#FFFFFF"
             android:textSize="20sp"/>
@@ -97,13 +97,13 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="40dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
-            android:text="@string/how_the_tracer_works"
+            android:text="@string/fields_meaning_header"
             android:textAlignment="textStart"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
@@ -114,7 +114,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="5dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
             android:text="@string/field_meaning"
