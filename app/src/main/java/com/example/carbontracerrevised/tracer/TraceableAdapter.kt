@@ -369,6 +369,7 @@ class TraceableAdapter(
         internal fun expandView(view: View) {
             val transition = AutoTransition()
             transition.doOnStart {
+                this@TraceableViewHolder.header.setBackgroundResource(R.drawable.dialog_title_background)
                 // EditText have an error which makes the text invisible when the traceable is expanded again.
                 // Resetting the text inside fixes the issue
                 for (editText in editTextList) {
