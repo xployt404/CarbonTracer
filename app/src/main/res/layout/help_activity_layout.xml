@@ -42,14 +42,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageView
-            android:layout_marginTop="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="82dp"
-            android:layout_marginHorizontal="30dp"
-            android:contentDescription="TODO"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_arrow_back" />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,7 +75,7 @@
             android:layout_marginTop="40dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
-            android:text="How to add traceables:"
+            android:text="@string/how_to_add_traceables"
             android:textAlignment="textStart"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
@@ -103,14 +95,6 @@
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
-        <ImageView
-            android:layout_marginTop="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="82dp"
-            android:layout_marginHorizontal="30dp"
-            android:contentDescription="TODO"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_arrow_forward" />
 
         <TextView
             android:layout_width="match_parent"
@@ -119,7 +103,7 @@
             android:layout_marginTop="40dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
-            android:text="Other functions:"
+            android:text="@string/how_the_tracer_works"
             android:textAlignment="textStart"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
@@ -133,40 +117,13 @@
             android:layout_marginTop="5dp"
             android:fontFamily="serif"
             android:scrollbars="vertical"
-            android:text="The Tracer is the heart of this app. It is a List of all the Objects, Activities etc. called Traceables"
+            android:text="@string/field_meaning"
             android:textAlignment="textStart"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="40dp"
-            android:fontFamily="serif"
-            android:scrollbars="vertical"
-            android:text="How the Tracer works"
-            android:textAlignment="textStart"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="5dp"
-            android:fontFamily="serif"
-            android:scrollbars="vertical"
-            android:text="The Tracer is the heart of this app. It is a List of all the Objects, Activities etc. called Traceables"
-            android:textAlignment="textStart"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
 
         <Button
             android:id="@+id/closeButton"

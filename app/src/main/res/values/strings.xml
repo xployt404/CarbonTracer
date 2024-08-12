@@ -16,8 +16,21 @@
 </string>
     <string name="what_is_tracer_text">
     <b>The Tracer</b> is the heart of this app.\nIt is a list of all the objects, activities, etc. that the user added to assess their CO2 emissions.\nThey are referred to as <b>Traceables</b>.
+Use the camera in the app to photograph an object you want to add or press the plus sign in the top right corner of the tracer.\nHold on a traceable to select it and click to unselect it.\nThe select mode is used to delete traceables.
+
+As well in the top right corner, is the „more options“ button. Here you can select all traceables, sort them by name, category or emissions, evaluate your footprint, show this help screen and reset your API key.
 </string>
     <string name="total_co2_text">&lt;b>%1$s kg&lt;/b></string>
+    <string name="how_to_add_traceables"><b>How to add traceables:</b></string>
+    <string name="field_meaning">What do the fields in the Traceables mean?\n
+<b>Name:</b> this is the name of the object or activity you want to evaluate. You can add additional information here like the fuel usage of a car, if you wanted to evaluate that (e.g. 7L diesel per 100km)\n
+<b>Material:</b> Only necessary where it influences the regular carbon footprint (e.g. regular disposed items like water bottles).\n
+<b>Category:</b> The category is only used for the statistics. You have Groceries, Consumer Products (which do not fall into groceries, electronics, transport, miscellaneous).\n
+<b>Amount:</b> The quantity of the object which can be just a number, but also a mass or something like kilometers for a car.\n
+<b>Occurrence:</b> How often is the object used in the defined amount. (e.g. 2 times weekly, 4 daily, monthly etc.)\n
+<b>CO2 equivalent yearly:</b> You can enter this yourself or let it be evaluated by Gemini.
+</string>
+    <string name="how_the_tracer_works"><b>How the Tracer works</b></string>
 
     <string-array name="occurence_array">
         <item>daily</item>
