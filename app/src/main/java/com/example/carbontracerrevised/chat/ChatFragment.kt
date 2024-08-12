@@ -19,9 +19,11 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -29,6 +31,8 @@ import com.example.carbontracerrevised.AudioRecorder
 import com.example.carbontracerrevised.GeminiModel
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
+import com.example.carbontracerrevised.SharedViewModel
+import com.google.ai.client.generativeai.type.UnknownException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +44,7 @@ class ChatFragment : Fragment() {
     private lateinit var typingIndicatorLayout : CardView
     private var chatHistoryList : MutableList<ChatMessage> = mutableListOf()
     private lateinit var chatHistory: ChatHistory
+    private lateinit var viewModel: SharedViewModel
     private var chatAdapter = ChatAdapter(this.chatHistoryList)
     private lateinit var recyclerView: RecyclerView
     private lateinit var recorder : AudioRecorder
@@ -56,8 +61,41 @@ class ChatFragment : Fragment() {
         recyclerView.itemAnimator = null
         recorder = AudioRecorder()
         recyclerView.adapter = chatAdapter
-        typingIndicatorLayout = chatFragmentView.findViewById(R.id.typingIndicatorCardView)
         chatHistory = ChatHistory(requireContext())
+        viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
+        viewModel.sharedString.observe(viewLifecycleOwner) { data ->
+            lifecycleScope.launch {
+                try {
+                    launch {
+                        addMessage(
+                            model.Tracer().evaluateFootprint(requireContext(), data),
+                            isGemini = true
+                        )
+                        withContext(Dispatchers.Main){
+                            stopTypingAnimation()
+                        }
+                    }
+                    withContext(Dispatchers.Main){
+                        scrollToBottom()
+                        startTypingAnimation()
+                        (activity as MainActivity).viewPager.currentItem = 0
+                    }
+                }catch (e: UnknownException){
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                    }
+                }catch (e : Exception){
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(requireContext(), "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                    }
+                }finally {
+                    withContext(Dispatchers.Main){
+                        stopTypingAnimation()
+                    }
+                }
+            }
+        }
+        typingIndicatorLayout = chatFragmentView.findViewById(R.id.typingIndicatorCardView)
         val clearChatBtn = chatFragmentView.findViewById<ImageButton>(R.id.clear_chat_button)
         glowView = chatFragmentView.findViewById(R.id.glowView)
         clearChatBtn.setOnClickListener {
@@ -91,7 +129,7 @@ class ChatFragment : Fragment() {
         })
 
 
-        sendButton = chatFragmentView.findViewById<ImageButton>(R.id.sendButton)
+        sendButton = chatFragmentView.findViewById(R.id.sendButton)
         sendButton.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -110,9 +148,9 @@ class ChatFragment : Fragment() {
                 }
                 MotionEvent.ACTION_UP -> {
                     Log.d(TAG, "Action Up")
-                    scrollToBottom()
                     if (recorder.isRecording){
                         Log.d(TAG, "Stopping Recording")
+                        scrollToBottom()
                         stopPulsatingGlow()
                         recorder.stopRecording()
                         if (!model.generating){
@@ -151,14 +189,12 @@ class ChatFragment : Fragment() {
         lifecycleScope.launch {
             startTypingAnimation()
             try {
-                withContext(Dispatchers.IO){
-                    model.File().sendFile(requireContext(),
+                model.File().sendFile(requireContext(),
                         File(
                             requireContext().filesDir, "recording.ogg"
                         ).toUri(),
                         chatHistory
                     )
-                }
             }catch (e : Exception){
                 addMessage("ERROR: ".plus(e.message.toString()), true)
             }finally {
@@ -253,9 +289,7 @@ class ChatFragment : Fragment() {
             lateinit var response: String
             try {
                 // Switch to IO context for the network call
-                response = withContext(Dispatchers.IO) {
-                    model.Chat(requireContext()).sendPrompt(msg).await()
-                }
+                model.Chat(requireContext()).sendPrompt(msg)
                 model.chatHistoryString += "output: $response\n\n"
             } catch (e: Exception) {
                 response = "ERROR: ${e.message}"

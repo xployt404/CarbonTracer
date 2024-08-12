@@ -9,18 +9,18 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.ConfigFile
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
+import com.example.carbontracerrevised.SharedViewModel
 import com.example.carbontracerrevised.chat.ChatHistory
-import com.google.ai.client.generativeai.type.UnknownException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,6 +31,7 @@ class TracerFragment : Fragment() {
     private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
     private lateinit var recyclerView: RecyclerView
     private lateinit var chatHistory : ChatHistory
+    private lateinit var viewModel: SharedViewModel
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +42,7 @@ class TracerFragment : Fragment() {
         recyclerView = tracerFragment.findViewById(R.id.traceableRecycler)
         recyclerView.layoutManager = LinearLayoutManager(context)
         chatHistory = ChatHistory(requireContext())
+        viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
         recyclerView.adapter = traceableAdapter
         val optionsAndClearBtn = tracerFragment.findViewById<ImageButton>(R.id.options_and_clear_button)
         val addAndUnselectBtn = tracerFragment.findViewById<ImageButton>(R.id.add_and_unselect_button)
@@ -101,31 +103,12 @@ class TracerFragment : Fragment() {
                 }
                 R.id.menu_item_footprint -> {
                     lifecycleScope.launch {
-                        try {
-                            withContext(Dispatchers.IO){
-
-                                chatHistory.insertChatMessage(
-                                    true,
-                                    traceableAdapter.model.Tracer().evaluateFootprint(
-                                        requireContext(),
-                                        traceableAdapter.tracerListString()
-                                    ),
-                                    "")
-                            }
-                            withContext(Dispatchers.Main){
+                     withContext(Dispatchers.Main){
                                 (activity as MainActivity).viewPager.currentItem = 0
+                                viewModel.setString(traceableAdapter.tracerListString())
                             }
-                        }catch (e: UnknownException){
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
-                            }
-                        }catch (e : Exception){
-                            withContext(Dispatchers.Main){
-                                Toast.makeText(requireContext(), "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
 
+                    }
 
                 }
                 R.id.menu_item_select_all ->{
@@ -195,37 +178,6 @@ class TracerFragment : Fragment() {
         }
 
         return tracerFragment
-    }
-    private var errorCounter = 0
-
-    private fun generateCO2ForAll() {
-        errorCounter = 0
-        for (t in traceableAdapter.selectedItems){
-            lifecycleScope.launch {
-                withContext(Dispatchers.Default) {
-                    try {
-                        val response = traceableAdapter.model.Tracer().generateCo2e(requireContext(), t, false)
-                        val calculatedCO2e = traceableAdapter.convertToKg(traceableAdapter.removeUnwantedChars(response[0]!!))
-
-                        t.co2e = calculatedCO2e
-                        traceableAdapter.traceableListObject.updateTraceable(t)
-
-                    }catch (e:Exception){
-                        errorCounter ++
-                    }finally {
-                        if (errorCounter>0){
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    activity,
-                                    "ERROR: $errorCounter were not calculated >_<",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private fun selectAllTraceables() {

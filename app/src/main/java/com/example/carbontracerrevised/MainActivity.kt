@@ -6,15 +6,12 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Rect
-import android.graphics.Typeface
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
 import android.text.Html
-import android.text.SpannableString
 import android.text.Spanned
-import android.text.style.StyleSpan
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -116,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         viewPager.adapter = adapter
 
 
-        tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        tabLayout = findViewById(R.id.tabLayout)
         val rootView = findViewById<View>(android.R.id.content)
         val rect = Rect()
         rootView.getWindowVisibleDisplayFrame(rect)
@@ -302,9 +299,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     updateTraceableFromEditTextList(t, editTextList)
-                    val response = withContext(Dispatchers.IO){
-                        traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
-                    }
+                    val response = traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
                     val calculatedCO2e = traceableAdapter.convertToKg(
                         traceableAdapter.removeUnwantedChars(
                             response[0]!!

@@ -38,7 +38,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.GeminiModel
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
-import com.example.carbontracerrevised.chat.ChatHistory
 import com.example.carbontracerrevised.tracer.Traceable
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +61,6 @@ class CameraFragment : Fragment() {
     private lateinit var  orientationEventListener : OrientationEventListener
     private var imageCapture : ImageCapture? = null
     var newRotation = 0f
-    var mode = TRACER
     private var flashMode = FLASH_MODE_OFF
     private var imageAnalyzeJob: Job? = null
 
@@ -132,16 +130,16 @@ class CameraFragment : Fragment() {
         }
 
         flashBtn.setOnClickListener {
-             when(flashMode){
-                 FLASH_MODE_ON -> {
-                     flashMode = FLASH_MODE_OFF
-                     flashBtn.setImageResource(R.drawable.ic_lightning_crossed)
-                 }
-                 FLASH_MODE_OFF -> {
-                     flashMode = FLASH_MODE_ON
-                     flashBtn.setImageResource(R.drawable.ic_lightning)
-                 }
-             }
+            when(flashMode){
+                FLASH_MODE_ON -> {
+                    flashMode = FLASH_MODE_OFF
+                    flashBtn.setImageResource(R.drawable.ic_lightning_crossed)
+                }
+                FLASH_MODE_OFF -> {
+                    flashMode = FLASH_MODE_ON
+                    flashBtn.setImageResource(R.drawable.ic_lightning)
+                }
+            }
         }
 
 
@@ -195,7 +193,7 @@ class CameraFragment : Fragment() {
             matrix, true
         )
     }
-    private fun takePhoto(chatHistory: ChatHistory? = null) {
+    private fun takePhoto() {
         Log.i(TAG, "Photo was taken")
         imageCapture = imageCapture ?:return
         imageCapture!!.flashMode = flashMode
@@ -216,35 +214,21 @@ class CameraFragment : Fragment() {
                     previewView.setBackgroundColor(Color.WHITE)
                     imageAnalyzeJob = lifecycleScope.launch {
                         try {
-                            when(mode){
-                                CHAT -> {
-                                    val chatResponse = model.Chat(requireContext()).sendPrompt(
-                                        objectInfo
-                                    ).await()
-                                    chatHistory?.insertChatMessage(true, chatResponse, "")
-                                }
-                                TRACER -> {
-                                    objectInfo = withContext(Dispatchers.IO) {
-                                            model.Tracer()
-                                            .interpretImage(requireContext(), listOf(bitmap))
-                                    }
+                            objectInfo = model.Tracer().interpretImage(requireContext(), listOf(bitmap))
 
-                                    val chunkedResponse = createTraceableFromGeminiResponse(
-                                        objectInfo
-                                    )
-                                    val dialog = (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
-                                    dialog.setOnDismissListener {
-                                        captureBtn.performClick()
-                                    }
-
-                                }
+                            val chunkedResponse = createTraceableFromGeminiResponse(
+                                objectInfo
+                            )
+                            val dialog = (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
+                            dialog.setOnDismissListener {
+                                captureBtn.performClick()
                             }
 
                         }catch (e : Exception){
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
                             }
-                            Log.e("Gemini ERROR", "${e.message.toString()}\nCause: ${e} \n ${e.suppressedExceptions}")
+                            Log.e("Gemini ERROR", "${e.message.toString()}\nCause: $e \n ${e.suppressedExceptions}")
                             e.printStackTrace()
                             model.generating = false
                         }finally {
@@ -299,8 +283,6 @@ class CameraFragment : Fragment() {
     companion object {
         private const val TAG = "CameraFragment"
         private val REQUIRED_PERMISSIONS = arrayOf(CAMERA, INTERNET)
-        private const val CHAT = 0
-        private const val TRACER = 1
 
     }
     fun createTraceableFromGeminiResponse(response: String) : Traceable {

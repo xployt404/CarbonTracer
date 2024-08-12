@@ -42,7 +42,6 @@ import kotlinx.coroutines.withContext
 class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
     lateinit var tracerTitleTextView: TextView
     lateinit var traceableListObject: TraceableList
-    var previousLastIndex = 0
     var selectModeEnabled = false
     val selectedItems = mutableListOf<Traceable>()
     val model = GeminiModel()
@@ -189,37 +188,36 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             holder.showFullResponseBtn.visibility = View.GONE
             holder.progressBar.visibility = View.VISIBLE
             lifecycleScope.launch {
-                withContext(Dispatchers.Default) {
 
-                    try {
-                        val response = model.Tracer().generateCo2e(activity.applicationContext, item, true)
-                        val calculatedCO2e = convertToKg(removeUnwantedChars(response[0]!!))
-                        fullResponse = response[1]!!
-                        item.co2e = calculatedCO2e
-                        traceableListObject.updateTraceable(item)
-                        withContext(Dispatchers.Main) {
-                            holder.co2eEditText.setText(calculatedCO2e)
-                        }
-                    }catch (e:UnknownException){
-                        withContext(Dispatchers.Main){
-                            Toast.makeText(activity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
-                        }
-                    }catch (e:Exception){
-                        withContext(Dispatchers.Main) {
-                            Log.e(TAG, "onBindViewHolder: ${e.cause}",)
-                            Toast.makeText(
-                                activity,
-                                "Response from the AI was inconclusive >_<",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }finally {
-                        withContext(Dispatchers.Main){
-                            holder.progressBar.visibility = View.GONE
-                            holder.showFullResponseBtn.visibility = View.VISIBLE
-                        }
+                try {
+                    val response = model.Tracer().generateCo2e(activity.applicationContext, item, true)
+                    val calculatedCO2e = convertToKg(removeUnwantedChars(response[0]!!))
+                    fullResponse = response[1]!!
+                    item.co2e = calculatedCO2e
+                    traceableListObject.updateTraceable(item)
+                    withContext(Dispatchers.Main) {
+                        holder.co2eEditText.setText(calculatedCO2e)
+                    }
+                }catch (e:UnknownException){
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(activity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                    }
+                }catch (e:Exception){
+                    withContext(Dispatchers.Main) {
+                        Log.e(TAG, "onBindViewHolder: ${e.cause}")
+                        Toast.makeText(
+                            activity,
+                            "Response from the AI was inconclusive >_<",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }finally {
+                    withContext(Dispatchers.Main){
+                        holder.progressBar.visibility = View.GONE
+                        holder.showFullResponseBtn.visibility = View.VISIBLE
                     }
                 }
+
             }
         }
 
@@ -269,7 +267,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
     inner class TraceableViewHolder (view: View): RecyclerView.ViewHolder(view){
         var expanded: Boolean = false
-        val header : ConstraintLayout
+        val header : ConstraintLayout = view.findViewById(R.id.traceableHeaderLayout)
         val body: TableLayout
 
         val amountEditText: EditText
@@ -288,7 +286,6 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
         internal var editTextList : MutableList<EditText>
         init {
-            header = view.findViewById(R.id.traceableHeaderLayout)
             nameTextView = header.findViewById(R.id.objectName)
             categoryIndicator = header.findViewById(R.id.category_indicator)
             co2eTextView = header.findViewById(R.id.co2e)
@@ -426,7 +423,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     "material: ${t.material}\n" +
                     "amount: ${t.amount}\n" +
                     "occurrence: ${t.occurrence}\n"
-            "co2e yearly: ${t.occurrence}\n\n"
+                    "co2e yearly: ${t.co2e}\n\n"
         }
         return tracerListString
     }

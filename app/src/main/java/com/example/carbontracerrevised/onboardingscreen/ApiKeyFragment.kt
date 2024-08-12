@@ -5,11 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.ConfigFile
-import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers

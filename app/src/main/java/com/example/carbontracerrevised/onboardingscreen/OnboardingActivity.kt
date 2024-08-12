@@ -4,7 +4,6 @@ package com.example.carbontracerrevised.onboardingscreen
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
-import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import com.example.carbontracerrevised.ViewPagerAdapter
 

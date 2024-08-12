@@ -72,7 +72,7 @@ class AudioRecorder {
                 mediaRecorder.release()
             }
         }catch (e:Exception){
-            Log.e(TAG, "stopRecording: ${e.message}", )
+            Log.e(TAG, "stopRecording: ${e.message}")
         }
     }
 }
