@@ -84,7 +84,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     when(holder.expanded) {
                         false -> {
                             Log.d(TAG, "onBindViewHolder: not expanded")
-                            holder.header.setBackgroundResource(R.drawable.dialog_title_background)
+                            holder.header.setBackgroundResource(R.drawable.header_background)
                             currentExpandedTraceable?.body?.visibility = View.GONE
                             currentExpandedTraceable?.expanded = false
                             currentExpandedTraceable?.header?.setBackgroundResource(R.drawable.header_background)
