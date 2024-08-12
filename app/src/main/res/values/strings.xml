@@ -31,6 +31,8 @@ As well in the top right corner, is the „more options“ button. Here you can 
     <string name="fields_meaning_header"><b>Meaning of the fields in the Traceables\n</b></string>
     <string name="how_to_use_carbontracer">How to use CarbonTracer?</string>
     <string name="what_the_tracer_is"><b>What the Tracer is</b></string>
+    <string name="welcome_to_carbontracer">Welcome to CarbonTracer!</string>
+    <string name="get_started">Get started</string>
 
     <string-array name="occurence_array">
         <item>daily</item>
