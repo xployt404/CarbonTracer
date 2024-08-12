@@ -156,24 +156,30 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             popupMenu.menuInflater.inflate(R.menu.category_menu, popupMenu.menu)
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 // Toast message on menu item clicked
-                when(menuItem.itemId){
+                val category = when(menuItem.itemId){
                     //TODO: implement all
                     R.id.menu_item_groceries -> {
-                        holder.updateCategory(item, GROCERIES)
+                        GROCERIES
                     }
                     R.id.menu_item_consumer_products ->{
-                        holder.updateCategory(item, CONSUMER_PRODUCTS)
+                        CONSUMER_PRODUCTS
                     }
                     R.id.menu_item_electronics ->{
-                        holder.updateCategory(item, ELECTRONICS)
+                        ELECTRONICS
                     }
                     R.id.menu_item_transport ->{
-                        holder.updateCategory(item, TRANSPORT)
+                        TRANSPORT
                     }
                     R.id.menu_item_misc ->{
-                        holder.updateCategory(item, MISC)
+                        MISC
+                    }
+
+                    else -> {
+                        MISC
                     }
                 }
+                holder.updateCategory(item, category)
+                holder.categoryIndicator.backgroundTintList = ColorStateList.valueOf(pieChartColors[category])
                 holder.amountEditText.requestFocus()
                 true
             }
@@ -423,7 +429,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     "material: ${t.material}\n" +
                     "amount: ${t.amount}\n" +
                     "occurrence: ${t.occurrence}\n"
-                    "co2e yearly: ${t.co2e}\n\n"
+            "co2e yearly: ${t.co2e}\n\n"
         }
         return tracerListString
     }

@@ -254,35 +254,31 @@ class MainActivity : AppCompatActivity() {
             popupMenu.menuInflater.inflate(R.menu.category_menu, popupMenu.menu)
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 // Toast message on menu item clicked
-                when(menuItem.itemId){
+                val category = when(menuItem.itemId){
                     R.id.menu_item_groceries -> {
-                        categorySwitcher.text = TraceableAdapter.categories[GROCERIES]
-                        categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[GROCERIES])
-                        t.category = GROCERIES
-
+                        GROCERIES
                     }
                     R.id.menu_item_consumer_products ->{
-                        categorySwitcher.text = TraceableAdapter.categories[CONSUMER_PRODUCTS]
-                        categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[CONSUMER_PRODUCTS])
-                        t.category = CONSUMER_PRODUCTS
+                        CONSUMER_PRODUCTS
                     }
                     R.id.menu_item_electronics ->{
-                        categorySwitcher.text = TraceableAdapter.categories[ELECTRONICS]
-                        categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[ELECTRONICS])
-                        t.category = ELECTRONICS
+                        ELECTRONICS
                     }
                     R.id.menu_item_transport ->{
-                        categorySwitcher.text = TraceableAdapter.categories[TRANSPORT]
-                        categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[TRANSPORT])
-                        t.category = TRANSPORT
+                        TRANSPORT
                     }
                     R.id.menu_item_misc ->{
-                        categorySwitcher.text = TraceableAdapter.categories[MISC]
-                        categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[MISC])
-                        t.category = MISC
+                        MISC
+                    }
+
+                    else -> {
+                        MISC
                     }
                 }
-                amountEditText.requestFocus()
+                categorySwitcher.text = TraceableAdapter.categories[category]
+                categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[category])
+                t.category = category
+                    amountEditText.requestFocus()
                 true
             }
             popupMenu.show()
