@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import com.example.carbontracerrevised.R
 import com.google.android.material.button.MaterialButton
 
-class TutorialFragment : Fragment(){
+class TutorialFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -17,7 +17,7 @@ class TutorialFragment : Fragment(){
         val tutorialFragment = inflater.inflate(R.layout.tutorial_fragment, container, false)
 
         tutorialFragment.findViewById<MaterialButton>(R.id.continue_button).setOnClickListener {
-          (activity as OnboardingActivity).viewPager.currentItem = 2
+            (activity as OnboardingActivity).viewPager.currentItem = 2
         }
         return tutorialFragment
     }

@@ -54,7 +54,7 @@ import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
-    companion object{
+    companion object {
         const val CAMERA = 1
         fun makeWordsBold(input: String): Spanned {
             // Create a SpannableString from the input
@@ -67,14 +67,14 @@ class MainActivity : AppCompatActivity() {
 
 
 
-            return Html.fromHtml(formattedText,Html.FROM_HTML_MODE_LEGACY)
+            return Html.fromHtml(formattedText, Html.FROM_HTML_MODE_LEGACY)
         }
 
     }
 
-    private var traceableList : MutableList<Traceable> = mutableListOf()
+    private var traceableList: MutableList<Traceable> = mutableListOf()
     lateinit var traceableListObject: TraceableList
-    private lateinit var traceableAdapter : TraceableAdapter
+    private lateinit var traceableAdapter: TraceableAdapter
     private var lastPage = CAMERA
     lateinit var viewPager: ViewPager2
     private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
@@ -101,14 +101,20 @@ class MainActivity : AppCompatActivity() {
                 .build()
         )
         // Initialize the permission request launcher
-        requestMultiplePermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            handlePermissionsResult(permissions)
-        }
+        requestMultiplePermissionsLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                handlePermissionsResult(permissions)
+            }
         traceableListObject = TraceableList.getInstance(this)
         viewPager = findViewById(R.id.pager)
         traceableAdapter = TraceableAdapter(this, lifecycleScope, traceableList)
         val tracerFragment = TracerFragment.newInstance(traceableAdapter)
-        val fragments = listOf(ChatFragment(), CameraFragment(), tracerFragment, StatisticsFragment.newInstance(traceableAdapter))
+        val fragments = listOf(
+            ChatFragment(),
+            CameraFragment(),
+            tracerFragment,
+            StatisticsFragment.newInstance(traceableAdapter)
+        )
         val adapter = ViewPagerAdapter(this@MainActivity, fragments)
         viewPager.adapter = adapter
 
@@ -120,9 +126,9 @@ class MainActivity : AppCompatActivity() {
         val height = rect.bottom
         rootView.viewTreeObserver.addOnGlobalLayoutListener {
             rootView.getWindowVisibleDisplayFrame(rect)
-            if (rect.bottom< height){
+            if (rect.bottom < height) {
                 tabLayout.visibility = View.GONE
-            }else{
+            } else {
                 tabLayout.visibility = View.VISIBLE
             }
         }
@@ -150,11 +156,12 @@ class MainActivity : AppCompatActivity() {
             }
         })
         lifecycleScope.launch {
-            if (!configFileExists()){
+            if (!configFileExists()) {
                 startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
             }
         }
     }
+
     suspend fun updateListFromDatabase() {
         withContext(Dispatchers.Default) {
             traceableAdapter.traceableList.clear()
@@ -171,16 +178,19 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         viewPager.currentItem = 1
     }
-    fun showPopupWindow(anchorView: View, fullResponse :String) {
+
+    fun showPopupWindow(anchorView: View, fullResponse: String) {
         // Inflate the popup_layout.xml
         val inflater = LayoutInflater.from(this)
         val popupView = inflater.inflate(R.layout.full_response_pop_up, null)
 
 
         // Create the PopupWindow
-        val popupWindow = PopupWindow(popupView,
+        val popupWindow = PopupWindow(
+            popupView,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT)
+            WindowManager.LayoutParams.WRAP_CONTENT
+        )
 
         popupView.findViewById<TextView>(R.id.popupText).text = makeWordsBold(fullResponse)
         // Set up the close button in the popup
@@ -191,12 +201,14 @@ class MainActivity : AppCompatActivity() {
 
         // Show the PopupWindow
         popupWindow.isFocusable = true // Allow interaction with the popup
-        popupWindow.showAtLocation(anchorView,
-            Gravity.CENTER, 0, 0)
+        popupWindow.showAtLocation(
+            anchorView,
+            Gravity.CENTER, 0, 0
+        )
     }
 
 
-    fun showAddTraceableDialog(t : Traceable): Dialog {
+    fun showAddTraceableDialog(t: Traceable): Dialog {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.add_traceable_dialog_layout)
         dialog.window!!.setLayout(
@@ -228,18 +240,23 @@ class MainActivity : AppCompatActivity() {
             co2eEditText.setText(co2e)
         }
 
-        val editTextList = listOf<EditText>(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
+        val editTextList = listOf<EditText>(
+            nameEditText,
+            materialEditText,
+            amountEditText,
+            occurrenceEditText,
+            co2eEditText
+        )
         editTextList.forEach { editText ->
             editText.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus){
+                if (hasFocus) {
                     editText.setSelection(editText.text.length)
                 }
             }
         }
 
         materialEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
-            {
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 // Handle the Enter key press here
                 categorySwitcher.performClick()
                 return@OnKeyListener true // Consume the event
@@ -254,20 +271,24 @@ class MainActivity : AppCompatActivity() {
             popupMenu.menuInflater.inflate(R.menu.category_menu, popupMenu.menu)
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 // Toast message on menu item clicked
-                val category = when(menuItem.itemId){
+                val category = when (menuItem.itemId) {
                     R.id.menu_item_groceries -> {
                         GROCERIES
                     }
-                    R.id.menu_item_consumer_products ->{
+
+                    R.id.menu_item_consumer_products -> {
                         CONSUMER_PRODUCTS
                     }
-                    R.id.menu_item_electronics ->{
+
+                    R.id.menu_item_electronics -> {
                         ELECTRONICS
                     }
-                    R.id.menu_item_transport ->{
+
+                    R.id.menu_item_transport -> {
                         TRANSPORT
                     }
-                    R.id.menu_item_misc ->{
+
+                    R.id.menu_item_misc -> {
                         MISC
                     }
 
@@ -278,7 +299,7 @@ class MainActivity : AppCompatActivity() {
                 categorySwitcher.text = TraceableAdapter.categories[category]
                 categorySwitcher.setBackgroundColor(traceableAdapter.pieChartColors[category])
                 t.category = category
-                    amountEditText.requestFocus()
+                amountEditText.requestFocus()
                 true
             }
             popupMenu.show()
@@ -295,7 +316,8 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     updateTraceableFromEditTextList(t, editTextList)
-                    val response = traceableAdapter.model.Tracer().generateCo2e(this@MainActivity , t, fullResponse = true)
+                    val response = traceableAdapter.model.Tracer()
+                        .generateCo2e(this@MainActivity, t, fullResponse = true)
                     val calculatedCO2e = traceableAdapter.convertToKg(
                         traceableAdapter.removeUnwantedChars(
                             response[0]!!
@@ -304,15 +326,23 @@ class MainActivity : AppCompatActivity() {
                     fullResponse = response[1]!!
                     co2eEditText.setText(calculatedCO2e)
                     updateTraceableFromEditTextList(t, editTextList)
-                }catch (e: UnknownException){
+                } catch (e: UnknownException) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Unable to reach Gemini >_<",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }catch (e : Exception){
-                    withContext(Dispatchers.Main){
-                        Toast.makeText(this@MainActivity, "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Response from the AI was inconclusive >_<",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }finally {
+                } finally {
                     progressBar.visibility = View.GONE
                     showFullResponseBtn.visibility = View.VISIBLE
 
@@ -322,7 +352,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dialog.findViewById<ImageButton>(R.id.dialog_cancel_button).setOnClickListener { dialog.dismiss()}
+        dialog.findViewById<ImageButton>(R.id.dialog_cancel_button)
+            .setOnClickListener { dialog.dismiss() }
         dialog.findViewById<ImageButton>(R.id.dialog_add_button).setOnClickListener {
 
             lifecycleScope.launch {
@@ -338,7 +369,11 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
         return dialog
     }
-    private suspend fun updateTraceableFromEditTextList(t: Traceable, editTextList: List<EditText>){
+
+    private suspend fun updateTraceableFromEditTextList(
+        t: Traceable,
+        editTextList: List<EditText>
+    ) {
         withContext(Dispatchers.Main) {
             editTextList.forEachIndexed { index, editText ->
                 val text = editText.text.toString()
@@ -355,18 +390,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//TODO: USE
-
-
     private suspend fun configFileExists(): Boolean {
-        return  withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             // Get the file from internal storage
             val file = File(filesDir, "config.json")
             file.exists() // Check if the file exists
         }
     }
-
-
 
 
     fun checkAndRequestPermissions(permissions: Array<String>): Boolean {
@@ -389,7 +419,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkPermissions(permissions: Array<String>): Boolean {
         for (permission in permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 return false
             }
         }

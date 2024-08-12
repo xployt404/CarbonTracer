@@ -9,7 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 
-class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
+class ChatAdapter(private val messages: List<ChatMessage>) :
+    RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
         // Access the object associated with the item
@@ -19,7 +20,7 @@ class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapte
             LayoutInflater.from(parent.context).inflate(R.layout.chat_msg_self, parent, false)
 
         }
-         return ChatViewHolder(view)
+        return ChatViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
@@ -30,6 +31,7 @@ class ChatAdapter(private val messages: List<ChatMessage>) : RecyclerView.Adapte
     override fun getItemCount(): Int {
         return messages.size
     }
+
     override fun getItemViewType(position: Int): Int {
         // Return the view type based on the boolean attribute of the object
         return if (messages[position].fromGemini) {

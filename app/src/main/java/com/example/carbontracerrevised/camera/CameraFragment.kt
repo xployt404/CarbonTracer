@@ -54,12 +54,12 @@ class CameraFragment : Fragment() {
     private lateinit var previewView: PreviewView
     private lateinit var imageView: ImageView
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var cameraControl : CameraControl
+    private lateinit var cameraControl: CameraControl
     private lateinit var progressBar: ProgressBar
     private lateinit var model: GeminiModel
-    private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
-    private lateinit var  orientationEventListener : OrientationEventListener
-    private var imageCapture : ImageCapture? = null
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private lateinit var orientationEventListener: OrientationEventListener
+    private var imageCapture: ImageCapture? = null
     var newRotation = 0f
     private var flashMode = FLASH_MODE_OFF
     private var imageAnalyzeJob: Job? = null
@@ -68,6 +68,7 @@ class CameraFragment : Fragment() {
         super.onCreate(savedInstanceState)
         cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -80,61 +81,66 @@ class CameraFragment : Fragment() {
         flashBtn = cameraView.findViewById(R.id.flashButton)
 
 
-
         // Initialize the OrientationEventListener
-        orientationEventListener = object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
-            override fun onOrientationChanged(orientation: Int) {
-                // Check the orientation and determine landscape side
-                newRotation = when (orientation) {
-                    in 315..360, in 0..45 -> {
-                        0f
-                    }
-                    in 46..134 -> {
-                        -90f
-                    }
+        orientationEventListener =
+            object : OrientationEventListener(requireContext(), SensorManager.SENSOR_DELAY_NORMAL) {
+                override fun onOrientationChanged(orientation: Int) {
+                    // Check the orientation and determine landscape side
+                    newRotation = when (orientation) {
+                        in 315..360, in 0..45 -> {
+                            0f
+                        }
+
+                        in 46..134 -> {
+                            -90f
+                        }
 //                    in 135..225 -> {
 //                        // Landscape Left (270 degrees)
 //                        flashBtn.rotation = 0f
 //                        (activity as MainActivity).handleCameraRotation(0f)
 //                    }
-                    in 226..314 -> {
-                        90f
-                    }
+                        in 226..314 -> {
+                            90f
+                        }
 
-                    else -> {flashBtn.rotation}
+                        else -> {
+                            flashBtn.rotation
+                        }
+                    }
+                    val animator =
+                        ObjectAnimator.ofFloat(flashBtn, "rotation", flashBtn.rotation, newRotation)
+                    animator.duration = 200 // Duration in milliseconds
+                    animator.interpolator = LinearInterpolator()
+                    animator.repeatCount = 0
+                    animator.doOnEnd {
+                        flashBtn.rotation = newRotation
+                    }
+                    animator.start()
                 }
-                val animator = ObjectAnimator.ofFloat(flashBtn, "rotation", flashBtn.rotation, newRotation)
-                animator.duration = 200 // Duration in milliseconds
-                animator.interpolator = LinearInterpolator()
-                animator.repeatCount = 0
-                animator.doOnEnd {
-                    flashBtn.rotation = newRotation
-                }
-                animator.start()
             }
-        }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         model = GeminiModel()
 
-        captureBtn.setOnClickListener{
-            if (imageView.visibility == View.VISIBLE){
+        captureBtn.setOnClickListener {
+            if (imageView.visibility == View.VISIBLE) {
                 captureBtn.setImageResource(0)
                 imageView.visibility = View.INVISIBLE
                 imageAnalyzeJob?.cancel()
-            }else{
+            } else {
                 progressBar.visibility = View.VISIBLE
                 takePhoto()
             }
         }
 
         flashBtn.setOnClickListener {
-            when(flashMode){
+            when (flashMode) {
                 FLASH_MODE_ON -> {
                     flashMode = FLASH_MODE_OFF
                     flashBtn.setImageResource(R.drawable.ic_lightning_crossed)
                 }
+
                 FLASH_MODE_OFF -> {
                     flashMode = FLASH_MODE_ON
                     flashBtn.setImageResource(R.drawable.ic_lightning)
@@ -167,13 +173,19 @@ class CameraFragment : Fragment() {
             try {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
-                cameraControl = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture).cameraControl
+                cameraControl = cameraProvider.bindToLifecycle(
+                    this,
+                    cameraSelector,
+                    preview,
+                    imageCapture
+                ).cameraControl
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(requireContext()))
     }
+
     private fun stopCamera() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -185,6 +197,7 @@ class CameraFragment : Fragment() {
         super.onDestroyView()
         cameraExecutor.shutdown()
     }
+
     private fun rotateImage(source: Bitmap, angle: Float): Bitmap {
         val matrix = Matrix()
         matrix.postRotate(angle)
@@ -193,18 +206,22 @@ class CameraFragment : Fragment() {
             matrix, true
         )
     }
+
     private fun takePhoto() {
         Log.i(TAG, "Photo was taken")
-        imageCapture = imageCapture ?:return
+        imageCapture = imageCapture ?: return
         imageCapture!!.flashMode = flashMode
         // Set up image capture listener, which is triggered after photo has been taken
         imageCapture!!.takePicture(
-            ContextCompat.getMainExecutor(requireContext()), object : ImageCapture.OnImageCapturedCallback() {
+            ContextCompat.getMainExecutor(requireContext()),
+            object : ImageCapture.OnImageCapturedCallback() {
                 override fun onError(exc: ImageCaptureException) {
                 }
+
                 override fun onCaptureSuccess(image: ImageProxy) {
                     var bitmap = imageProxyToBitmap(image)
-                    val imageRotation = -newRotation // store so scale type and orientation are coherent
+                    val imageRotation =
+                        -newRotation // store so scale type and orientation are coherent
                     bitmap = rotateImage(bitmap, imageRotation)
                     if (imageRotation == 0f)
                         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
@@ -214,24 +231,33 @@ class CameraFragment : Fragment() {
                     previewView.setBackgroundColor(Color.WHITE)
                     imageAnalyzeJob = lifecycleScope.launch {
                         try {
-                            objectInfo = model.Tracer().interpretImage(requireContext(), listOf(bitmap))
+                            objectInfo =
+                                model.Tracer().interpretImage(requireContext(), listOf(bitmap))
 
                             val chunkedResponse = createTraceableFromGeminiResponse(
                                 objectInfo
                             )
-                            val dialog = (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
+                            val dialog =
+                                (activity as MainActivity).showAddTraceableDialog(chunkedResponse)
                             dialog.setOnDismissListener {
                                 captureBtn.performClick()
                             }
 
-                        }catch (e : Exception){
+                        } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Unable to reach Gemini >_<",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
-                            Log.e("Gemini ERROR", "${e.message.toString()}\nCause: $e \n ${e.suppressedExceptions}")
+                            Log.e(
+                                "Gemini ERROR",
+                                "${e.message.toString()}\nCause: $e \n ${e.suppressedExceptions}"
+                            )
                             e.printStackTrace()
                             model.generating = false
-                        }finally {
+                        } finally {
                             image.close()
                             progressBar.visibility = View.INVISIBLE
                         }
@@ -252,12 +278,12 @@ class CameraFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         orientationEventListener.enable()
-        if ((requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)){
+        if ((requireActivity() as MainActivity).checkAndRequestPermissions(REQUIRED_PERMISSIONS)) {
             startCamera()
-        }else{
+        } else {
             Toast.makeText(requireContext(), "Missing Permissions", Toast.LENGTH_SHORT).show()
         }
-        if (model.generating){
+        if (model.generating) {
             progressBar.visibility = View.VISIBLE
         }
     }
@@ -276,7 +302,10 @@ class CameraFragment : Fragment() {
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
         // Rotate the bitmap if necessary
-        return rotateBitmap(bitmap, image.imageInfo.rotationDegrees.toFloat()) // Adjust the angle as needed
+        return rotateBitmap(
+            bitmap,
+            image.imageInfo.rotationDegrees.toFloat()
+        ) // Adjust the angle as needed
     }
 
 
@@ -285,7 +314,8 @@ class CameraFragment : Fragment() {
         private val REQUIRED_PERMISSIONS = arrayOf(CAMERA, INTERNET)
 
     }
-    fun createTraceableFromGeminiResponse(response: String) : Traceable {
+
+    fun createTraceableFromGeminiResponse(response: String): Traceable {
         println(response)
 
         val objectName = Regex("objectName: (.*)").find(response)?.groupValues?.get(1)
@@ -294,7 +324,15 @@ class CameraFragment : Fragment() {
         val unit = Regex("unit: (.*)").find(response)?.groupValues?.get(1)
 
 
-        return Traceable(0, objectName.toString(), material.toString(), "$amount $unit", "", 0, "0.0")
+        return Traceable(
+            0,
+            objectName.toString(),
+            material.toString(),
+            "$amount $unit",
+            "",
+            0,
+            "0.0"
+        )
 
     }
 

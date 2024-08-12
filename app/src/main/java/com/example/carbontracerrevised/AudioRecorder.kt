@@ -1,4 +1,5 @@
 package com.example.carbontracerrevised
+
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -15,7 +16,8 @@ import java.io.File
 class AudioRecorder {
     private lateinit var mediaRecorder: MediaRecorder
     var isRecording = false
-    companion object{
+
+    companion object {
         private const val TAG = "Audio Recorder"
     }
 
@@ -62,16 +64,15 @@ class AudioRecorder {
     }
 
 
-
     fun stopRecording() {
         try {
-            if (isRecording){
+            if (isRecording) {
                 isRecording = false
                 // To stop recording
                 mediaRecorder.stop()
                 mediaRecorder.release()
             }
-        }catch (e:Exception){
+        } catch (e: Exception) {
             Log.e(TAG, "stopRecording: ${e.message}")
         }
     }

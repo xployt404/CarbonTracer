@@ -28,10 +28,13 @@ import kotlinx.coroutines.withContext
 
 class TracerFragment : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
-    private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
+    private suspend fun updateListFromDatabase() =
+        (activity as MainActivity).updateListFromDatabase()
+
     private lateinit var recyclerView: RecyclerView
-    private lateinit var chatHistory : ChatHistory
+    private lateinit var chatHistory: ChatHistory
     private lateinit var viewModel: SharedViewModel
+
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,8 +47,10 @@ class TracerFragment : Fragment() {
         chatHistory = ChatHistory(requireContext())
         viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
         recyclerView.adapter = traceableAdapter
-        val optionsAndClearBtn = tracerFragment.findViewById<ImageButton>(R.id.options_and_clear_button)
-        val addAndUnselectBtn = tracerFragment.findViewById<ImageButton>(R.id.add_and_unselect_button)
+        val optionsAndClearBtn =
+            tracerFragment.findViewById<ImageButton>(R.id.options_and_clear_button)
+        val addAndUnselectBtn =
+            tracerFragment.findViewById<ImageButton>(R.id.add_and_unselect_button)
         val selectAllBtn = tracerFragment.findViewById<Button>(R.id.selectAllButton)
         traceableAdapter.optionsAndClearBtn = optionsAndClearBtn
         traceableAdapter.addAndUnselectBtn = addAndUnselectBtn
@@ -58,16 +63,19 @@ class TracerFragment : Fragment() {
         sortingPopMenu.menuInflater.inflate(R.menu.sorting_menu, sortingPopMenu.menu)
         sortingPopMenu.setOnMenuItemClickListener { menuItem ->
             lifecycleScope.launch {
-                val sortedTraceables =  when(menuItem.itemId){
+                val sortedTraceables = when (menuItem.itemId) {
                     R.id.menu_item_sort_by_name -> {
                         traceableAdapter.sortTraceablesBy(SORT_BY_NAME)
                     }
+
                     R.id.menu_item_sort_by_category -> {
                         traceableAdapter.sortTraceablesBy(SORT_BY_CATEGORY)
                     }
+
                     R.id.menu_item_sort_by_co2e -> {
                         traceableAdapter.sortTraceablesBy(SORT_BY_CO2E)
                     }
+
                     else -> {
                         traceableAdapter.traceableList
                     }
@@ -96,28 +104,32 @@ class TracerFragment : Fragment() {
         settingsPopMenu.menuInflater.inflate(R.menu.options_menu, settingsPopMenu.menu)
         settingsPopMenu.setOnMenuItemClickListener { menuItem ->
             // Toast message on menu item clicked
-            when(menuItem.itemId){
+            when (menuItem.itemId) {
                 //TODO: implement all
                 R.id.menu_item_help -> {
 
                 }
+
                 R.id.menu_item_footprint -> {
                     lifecycleScope.launch {
-                     withContext(Dispatchers.Main){
-                                (activity as MainActivity).viewPager.currentItem = 0
-                                viewModel.setString(traceableAdapter.tracerListString())
-                            }
+                        withContext(Dispatchers.Main) {
+                            (activity as MainActivity).viewPager.currentItem = 0
+                            viewModel.setString(traceableAdapter.tracerListString())
+                        }
 
                     }
 
                 }
-                R.id.menu_item_select_all ->{
+
+                R.id.menu_item_select_all -> {
                     selectAllTraceables()
                 }
-                R.id.menu_item_sort_by ->{
+
+                R.id.menu_item_sort_by -> {
                     sortingPopMenu.show()
                 }
-                R.id.menu_item_api_key ->{
+
+                R.id.menu_item_api_key -> {
                     showApiKeyDialog()
                 }
             }
@@ -126,7 +138,7 @@ class TracerFragment : Fragment() {
         }
 
         optionsAndClearBtn.setOnClickListener {
-            when(traceableAdapter.selectModeEnabled){
+            when (traceableAdapter.selectModeEnabled) {
                 false -> {
                     //TODO: display options for traceable
                     // Initializing the popup menu and giving the reference as current context
@@ -134,15 +146,16 @@ class TracerFragment : Fragment() {
                     // Showing the popup menu
                     settingsPopMenu.show()
                 }
+
                 true -> {
                     lifecycleScope.launch {
                         (requireActivity() as MainActivity).traceableListObject.deleteTraceable(
                             traceableAdapter.selectedItems
                         )
-                        withContext(Dispatchers.IO){
+                        withContext(Dispatchers.IO) {
                             traceableAdapter.selectedItems.clear()
                         }
-                        withContext(Dispatchers.Main){
+                        withContext(Dispatchers.Main) {
                             for (i in 0 until recyclerView.childCount) {
                                 val view: View? = recyclerView.getChildAt(i)
 
@@ -158,14 +171,14 @@ class TracerFragment : Fragment() {
         }
 
         addAndUnselectBtn.setOnClickListener {
-            if (traceableAdapter.selectModeEnabled){
+            if (traceableAdapter.selectModeEnabled) {
                 traceableAdapter.selectedItems.clear()
                 for (i in 0 until recyclerView.childCount) {
                     val view: View? = recyclerView.getChildAt(i)
 
                     view?.foreground = null
                 }
-            }else{
+            } else {
                 (activity as MainActivity).showAddTraceableDialog(Traceable.newEmptyTraceable())
 
             }
@@ -186,10 +199,12 @@ class TracerFragment : Fragment() {
         for (i in 0 until recyclerView.childCount) {
             val view: View? = recyclerView.getChildAt(i)
 
-            view?.foreground = ContextCompat.getDrawable(requireContext(), R.drawable.traceable_selected)
+            view?.foreground =
+                ContextCompat.getDrawable(requireContext(), R.drawable.traceable_selected)
         }
         traceableAdapter.toggleSelectMode()
     }
+
     // Function to show the dialog
     private fun showApiKeyDialog() {
         // Create a Dialog
@@ -204,7 +219,12 @@ class TracerFragment : Fragment() {
 
             // Find the EditText and Buttons
             val apiKeyEditText = dialog.findViewById<EditText>(R.id.editTextApiKey)
-            apiKeyEditText.setText(ConfigFile.getJsonAttribute(ConfigFile.read(requireContext()), "apiKey"))
+            apiKeyEditText.setText(
+                ConfigFile.getJsonAttribute(
+                    ConfigFile.read(requireContext()),
+                    "apiKey"
+                )
+            )
             val okButton = dialog.findViewById<ImageButton>(R.id.ok_button)
             val cancelButton = dialog.findViewById<ImageButton>(R.id.cancel_button)
 
@@ -231,7 +251,7 @@ class TracerFragment : Fragment() {
 
     private fun onApiKeyEntered(apiKey: String) {
         lifecycleScope.launch {
-            withContext(Dispatchers.IO){
+            withContext(Dispatchers.IO) {
                 ConfigFile.updateJsonAttribute(requireContext(), "apiKey", apiKey)
             }
         }
@@ -244,12 +264,14 @@ class TracerFragment : Fragment() {
             updateListFromDatabase()
         }
     }
+
     companion object {
         fun newInstance(adapter: TraceableAdapter): TracerFragment {
             val fragment = TracerFragment()
             fragment.traceableAdapter = adapter // Set the adapter
             return fragment
         }
+
         const val SORT_BY_NAME = 0
         const val SORT_BY_CATEGORY = 1
         const val SORT_BY_CO2E = 2

@@ -13,12 +13,11 @@ class OnboardingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
 
-       viewPager = findViewById(R.id.onboarding_pager)
+        viewPager = findViewById(R.id.onboarding_pager)
         val fragments = listOf(WelcomeFragment(), TutorialFragment(), ApiKeyFragment())
         val adapter = ViewPagerAdapter(this, fragments)
         viewPager.adapter = adapter
     }
-
 
 
 }

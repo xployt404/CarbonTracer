@@ -5,7 +5,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.BaseColumns
 
-class TracerDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class TracerDbHelper(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         const val DATABASE_VERSION = 1
@@ -30,8 +31,10 @@ object TracerContract {
         const val TABLE_NAME = "tracer"
         const val COLUMN_NAME_OBJECT_NAME = "objectName"
         const val COLUMN_NAME_MATERIAL = "material"
-        const val COLUMN_NAME_AMOUNT = "amount" // Consider changing to INTEGER or REAL if applicable
-        const val COLUMN_NAME_OCCURRENCE = "occurrence" // Consider changing to INTEGER or REAL if applicable
+        const val COLUMN_NAME_AMOUNT =
+            "amount" // Consider changing to INTEGER or REAL if applicable
+        const val COLUMN_NAME_OCCURRENCE =
+            "occurrence" // Consider changing to INTEGER or REAL if applicable
         const val COLUMN_NAME_CATEGORY = "category" // This should be INTEGER
         const val COLUMN_NAME_CO2E = "co2e" // Consider changing to REAL if applicable
     }

@@ -34,10 +34,10 @@ class ApiKeyFragment : Fragment() {
                 config.put("apiKey", apiKey)
                 config.put("flashMode", 2)
                 lifecycleScope.launch {
-                    withContext(Dispatchers.IO){
+                    withContext(Dispatchers.IO) {
                         ConfigFile.write(requireContext(), config.toString())
                     }
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         requireActivity().finish()
                     }
                 }

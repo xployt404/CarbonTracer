@@ -7,11 +7,11 @@ import org.json.JSONObject
 import java.io.IOException
 
 class ConfigFile {
-    companion object{
+    companion object {
         private const val FILE_NAME = "config.json"
         suspend fun read(context: Context): String? {
             return try {
-                withContext(Dispatchers.IO){
+                withContext(Dispatchers.IO) {
                     val inputStream = context.openFileInput(FILE_NAME)
                     inputStream.bufferedReader().use { it.readText() }
                 }
@@ -23,7 +23,7 @@ class ConfigFile {
 
         suspend fun write(context: Context, jsonString: String) {
             try {
-                withContext(Dispatchers.IO){
+                withContext(Dispatchers.IO) {
                     val outputStream = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)
                     outputStream.write(jsonString.toByteArray())
                     outputStream.close()

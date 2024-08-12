@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import com.example.carbontracerrevised.R
 
 
-class WelcomeFragment : Fragment(){
+class WelcomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

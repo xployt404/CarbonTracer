@@ -38,7 +38,9 @@ import java.util.Locale
 
 class StatisticsFragment : Fragment() {
     private lateinit var traceableAdapter: TraceableAdapter
-    private suspend fun updateListFromDatabase() = (activity as MainActivity).updateListFromDatabase()
+    private suspend fun updateListFromDatabase() =
+        (activity as MainActivity).updateListFromDatabase()
+
     private lateinit var pieChart: PieChart
     private lateinit var barChart: HorizontalBarChart
     private lateinit var totalYearlyTextView: TextView
@@ -50,13 +52,13 @@ class StatisticsFragment : Fragment() {
     private var total = 0f
     private lateinit var totalCo2TextView: TextView
 
-    companion object{
+    companion object {
         const val TAG = "StatisticsFragment"
         fun newInstance(adapter: TraceableAdapter): StatisticsFragment {
-                val fragment = StatisticsFragment()
-                fragment.traceableAdapter = adapter // Set the adapter
-                return fragment
-            }
+            val fragment = StatisticsFragment()
+            fragment.traceableAdapter = adapter // Set the adapter
+            return fragment
+        }
 
     }
 
@@ -162,8 +164,8 @@ class StatisticsFragment : Fragment() {
         // Now switch back to the main context to update the UI
         withContext(Dispatchers.Main) {
             totalYearlyTextView.text = String.format(Locale.US, "%.2f", total)
-            totalMonthlyTextView.text = String.format(Locale.US, "%.2f", total/12)
-            totalDailyTextView.text = String.format(Locale.US, "%.2f", total/365)
+            totalMonthlyTextView.text = String.format(Locale.US, "%.2f", total / 12)
+            totalDailyTextView.text = String.format(Locale.US, "%.2f", total / 365)
 
             pieEntries.clear()
             pieEntries.addAll(
@@ -214,9 +216,9 @@ class StatisticsFragment : Fragment() {
     }
 
 
-    private suspend fun updateBarChart(){
-        var labels : List<String>
-        var barData : BarData
+    private suspend fun updateBarChart() {
+        var labels: List<String>
+        var barData: BarData
         withContext(Dispatchers.Default) {
             val sortedTraceables =
                 traceableAdapter.sortTraceablesBy(TracerFragment.SORT_BY_CO2E, traceablesWithCo2e)
@@ -236,7 +238,7 @@ class StatisticsFragment : Fragment() {
             barData = BarData(barDataSet)
             labels = sortedTraceables.map { it.name }
         }
-        withContext(Dispatchers.Main){
+        withContext(Dispatchers.Main) {
             barChart.apply {
                 xAxis.valueFormatter = IndexAxisValueFormatter(labels)
                 data = barData
@@ -247,9 +249,9 @@ class StatisticsFragment : Fragment() {
 
     private fun updateStatistic() {
         traceablesWithCo2e.clear()
-        for (t in traceableAdapter.traceableList){
+        for (t in traceableAdapter.traceableList) {
             val extractedNumberAsString = t.co2e.replace(Regex("[^\\d.]"), "")
-            if (extractedNumberAsString.isNotEmpty()){
+            if (extractedNumberAsString.isNotEmpty()) {
                 t.co2e = extractedNumberAsString
                 traceablesWithCo2e.add(t)
             }

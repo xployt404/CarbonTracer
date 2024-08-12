@@ -39,28 +39,36 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-class TraceableAdapter(private val activity: Activity, private val lifecycleScope: CoroutineScope, val traceableList : MutableList<Traceable>) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
+class TraceableAdapter(
+    private val activity: Activity,
+    private val lifecycleScope: CoroutineScope,
+    val traceableList: MutableList<Traceable>
+) : RecyclerView.Adapter<TraceableAdapter.TraceableViewHolder>() {
     lateinit var tracerTitleTextView: TextView
     lateinit var traceableListObject: TraceableList
     var selectModeEnabled = false
     val selectedItems = mutableListOf<Traceable>()
     val model = GeminiModel()
-    private var currentExpandedTraceable : TraceableViewHolder? = null
-    lateinit var optionsAndClearBtn : ImageButton
-    lateinit var addAndUnselectBtn : ImageButton
+    private var currentExpandedTraceable: TraceableViewHolder? = null
+    lateinit var optionsAndClearBtn: ImageButton
+    lateinit var addAndUnselectBtn: ImageButton
     lateinit var selectAllBtn: Button
-    private lateinit var progressBarColorFilter : PorterDuffColorFilter
+    private lateinit var progressBarColorFilter: PorterDuffColorFilter
     val pieChartColors = ColorTemplate.MATERIAL_COLORS.toList() + Color.LTGRAY
 
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
-        progressBarColorFilter = PorterDuffColorFilter(ContextCompat.getColor(activity, R.color.light_blue_600), PorterDuff.Mode.SRC_IN)
+        progressBarColorFilter = PorterDuffColorFilter(
+            ContextCompat.getColor(activity, R.color.light_blue_600),
+            PorterDuff.Mode.SRC_IN
+        )
         traceableListObject = TraceableList.getInstance(activity)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TraceableViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.traceable_element, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.traceable_element, parent, false)
         return TraceableViewHolder(view)
     }
 
@@ -77,11 +85,11 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             holder.categoryIndicator,
             holder.header.findViewById(R.id.co2e)
         )
-        for (v in clickToCollapse){
+        for (v in clickToCollapse) {
             v.setOnClickListener {
                 Log.i(TAG, "onBindViewHolder: Click")
-                if (!selectModeEnabled){
-                    when(holder.expanded) {
+                if (!selectModeEnabled) {
+                    when (holder.expanded) {
                         false -> {
                             Log.d(TAG, "onBindViewHolder: not expanded")
                             holder.header.setBackgroundResource(R.drawable.header_background)
@@ -91,11 +99,12 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                             holder.expandView(holder.body)
                             currentExpandedTraceable = holder
                         }
+
                         else -> {
                             holder.collapseView(holder.body)
                         }
                     }
-                }else{
+                } else {
                     v.performLongClick()
                 }
             }
@@ -103,10 +112,11 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
             v.setOnLongClickListener {
                 Log.i(TAG, "onBindViewHolder: Long Click")
-                if (!selectedItems.contains(item)){
-                    holder.itemView.foreground = ContextCompat.getDrawable(activity,R.drawable.traceable_selected)
+                if (!selectedItems.contains(item)) {
+                    holder.itemView.foreground =
+                        ContextCompat.getDrawable(activity, R.drawable.traceable_selected)
                     selectedItems.add(item)
-                }else{
+                } else {
                     holder.itemView.foreground = null
                     selectedItems.remove(item)
                 }
@@ -122,10 +132,9 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             editText.setOnFocusChangeListener { _, hasFocus ->
                 lifecycleScope.launch {
                     Log.d(TAG, "onBindViewHolder: focusChange")
-                    if (hasFocus){
+                    if (hasFocus) {
                         editText.setSelection(editText.text.length)
-                    }
-                    else {
+                    } else {
                         val text = editText.text.toString()
 
                         if (index < propertyNames.size) {
@@ -140,8 +149,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             }
         }
         holder.materialEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
-            {
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 // Handle the Enter key press here
                 holder.categorySwitcher.performClick()
                 return@OnKeyListener true // Consume the event
@@ -156,21 +164,25 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             popupMenu.menuInflater.inflate(R.menu.category_menu, popupMenu.menu)
             popupMenu.setOnMenuItemClickListener { menuItem ->
                 // Toast message on menu item clicked
-                val category = when(menuItem.itemId){
+                val category = when (menuItem.itemId) {
                     //TODO: implement all
                     R.id.menu_item_groceries -> {
                         GROCERIES
                     }
-                    R.id.menu_item_consumer_products ->{
+
+                    R.id.menu_item_consumer_products -> {
                         CONSUMER_PRODUCTS
                     }
-                    R.id.menu_item_electronics ->{
+
+                    R.id.menu_item_electronics -> {
                         ELECTRONICS
                     }
-                    R.id.menu_item_transport ->{
+
+                    R.id.menu_item_transport -> {
                         TRANSPORT
                     }
-                    R.id.menu_item_misc ->{
+
+                    R.id.menu_item_misc -> {
                         MISC
                     }
 
@@ -179,7 +191,8 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     }
                 }
                 holder.updateCategory(item, category)
-                holder.categoryIndicator.backgroundTintList = ColorStateList.valueOf(pieChartColors[category])
+                holder.categoryIndicator.backgroundTintList =
+                    ColorStateList.valueOf(pieChartColors[category])
                 holder.amountEditText.requestFocus()
                 true
             }
@@ -196,7 +209,8 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             lifecycleScope.launch {
 
                 try {
-                    val response = model.Tracer().generateCo2e(activity.applicationContext, item, true)
+                    val response =
+                        model.Tracer().generateCo2e(activity.applicationContext, item, true)
                     val calculatedCO2e = convertToKg(removeUnwantedChars(response[0]!!))
                     fullResponse = response[1]!!
                     item.co2e = calculatedCO2e
@@ -204,11 +218,12 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     withContext(Dispatchers.Main) {
                         holder.co2eEditText.setText(calculatedCO2e)
                     }
-                }catch (e:UnknownException){
-                    withContext(Dispatchers.Main){
-                        Toast.makeText(activity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                } catch (e: UnknownException) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(activity, "Unable to reach Gemini >_<", Toast.LENGTH_SHORT)
+                            .show()
                     }
-                }catch (e:Exception){
+                } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Log.e(TAG, "onBindViewHolder: ${e.cause}")
                         Toast.makeText(
@@ -217,8 +232,8 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                }finally {
-                    withContext(Dispatchers.Main){
+                } finally {
+                    withContext(Dispatchers.Main) {
                         holder.progressBar.visibility = View.GONE
                         holder.showFullResponseBtn.visibility = View.VISIBLE
                     }
@@ -231,19 +246,18 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
     }
 
 
-
-    fun convertToKg(str : String) : String{
+    fun convertToKg(str: String): String {
         val unit = str.replace(Regex("\\s+"), "").takeLast(2)
-        return if ( unit == "kg"){ // unit is kilograms
+        return if (unit == "kg") { // unit is kilograms
             str
-        }else if (unit.last() == 't'){ // unit is metric tons
-            (str.replace(Regex("[^\\d.,]"), "").toFloat()*1000).toString() + " kg"
-        }else{ // unit is grams
-            (str.replace(Regex("[^\\d.,]"), "").toFloat()/1000).toString() + " kg"
+        } else if (unit.last() == 't') { // unit is metric tons
+            (str.replace(Regex("[^\\d.,]"), "").toFloat() * 1000).toString() + " kg"
+        } else { // unit is grams
+            (str.replace(Regex("[^\\d.,]"), "").toFloat() / 1000).toString() + " kg"
         }
     }
 
-    private fun rotateView(view: View, newRotation : Float){
+    private fun rotateView(view: View, newRotation: Float) {
         val animator = ValueAnimator.ofFloat(view.rotation, newRotation)
         animator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Float
@@ -253,16 +267,16 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         animator.start() // Start the animation
     }
 
-    fun toggleSelectMode(){
+    fun toggleSelectMode() {
         Log.d(TAG, "toggleSelectMode: toggled")
-        if (selectedItems.size>0){
+        if (selectedItems.size > 0) {
 
             optionsAndClearBtn.setImageResource(android.R.drawable.ic_menu_delete)
             rotateView(addAndUnselectBtn, 0F)
             selectAllBtn.visibility = View.VISIBLE
             tracerTitleTextView.visibility = View.GONE
             selectModeEnabled = true
-        }else{
+        } else {
             optionsAndClearBtn.setImageResource(R.drawable.ic_three_dots)
             rotateView(addAndUnselectBtn, 45F)
             selectAllBtn.visibility = View.GONE
@@ -271,9 +285,9 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         }
     }
 
-    inner class TraceableViewHolder (view: View): RecyclerView.ViewHolder(view){
+    inner class TraceableViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var expanded: Boolean = false
-        val header : ConstraintLayout = view.findViewById(R.id.traceableHeaderLayout)
+        val header: ConstraintLayout = view.findViewById(R.id.traceableHeaderLayout)
         val body: TableLayout
 
         val amountEditText: EditText
@@ -284,13 +298,14 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         val co2eEditText: EditText
         private val nameTextView: TextView
         val generateCo2eButton: ImageButton
-        val showFullResponseBtn : ImageButton
+        val showFullResponseBtn: ImageButton
         val categorySwitcher: Button
         val progressBar: ProgressBar
-        val categoryIndicator : Button
+        val categoryIndicator: Button
 
 
-        internal var editTextList : MutableList<EditText>
+        internal var editTextList: MutableList<EditText>
+
         init {
             nameTextView = header.findViewById(R.id.objectName)
             categoryIndicator = header.findViewById(R.id.category_indicator)
@@ -308,7 +323,13 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             showFullResponseBtn = body.findViewById(R.id.show_full_response_button)
 
 
-            editTextList = mutableListOf(nameEditText, materialEditText, amountEditText, occurrenceEditText, co2eEditText)
+            editTextList = mutableListOf(
+                nameEditText,
+                materialEditText,
+                amountEditText,
+                occurrenceEditText,
+                co2eEditText
+            )
             nameEditText.doOnTextChanged { text, _, _, _ ->
                 nameTextView.text = text
             }
@@ -318,6 +339,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                     .replace(" ", "")
             }
         }
+
         internal fun updateCategory(item: Traceable, category: Int) {
             Log.d(TAG, "updateCategory: updated")
             item.category = category
@@ -338,10 +360,10 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
                 categorySwitcher.text = categories[category]
                 categorySwitcher.setBackgroundColor(pieChartColors[category])
                 co2eEditText.setText(traceable.co2e)
-                categoryIndicator.backgroundTintList = ColorStateList.valueOf(pieChartColors[category])
+                categoryIndicator.backgroundTintList =
+                    ColorStateList.valueOf(pieChartColors[category])
             }
         }
-
 
 
         internal fun expandView(view: View) {
@@ -349,7 +371,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
             transition.doOnStart {
                 // EditText have an error which makes the text invisible when the traceable is expanded again.
                 // Resetting the text inside fixes the issue
-                for (editText in editTextList){
+                for (editText in editTextList) {
                     editText.text = editText.text
                 }
             }
@@ -397,24 +419,31 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
         return result
     }
 
-    suspend fun sortTraceablesBy(criteria: Int, list: MutableList<Traceable> = traceableList) : List<Traceable>{
+    suspend fun sortTraceablesBy(
+        criteria: Int,
+        list: MutableList<Traceable> = traceableList
+    ): List<Traceable> {
 
-        return withContext(Dispatchers.Default){
-            when(criteria){
-                TracerFragment.SORT_BY_NAME->{
+        return withContext(Dispatchers.Default) {
+            when (criteria) {
+                TracerFragment.SORT_BY_NAME -> {
                     list.sortedBy { it.name }
                 }
+
                 TracerFragment.SORT_BY_CATEGORY -> {
                     list.sortedBy { it.category }
                 }
+
                 TracerFragment.SORT_BY_CO2E -> {
                     list.sortedBy {
                         when {
                             it.co2e.isEmpty() -> 0f // Handle empty string
-                            else -> it.co2e.replace(Regex("[^\\d.]"), "").toFloatOrNull() ?: 0f // Handle invalid strings
+                            else -> it.co2e.replace(Regex("[^\\d.]"), "").toFloatOrNull()
+                                ?: 0f // Handle invalid strings
                         }
                     }
                 }
+
                 else -> {
                     list
                 }
@@ -424,7 +453,7 @@ class TraceableAdapter(private val activity: Activity, private val lifecycleScop
 
     fun tracerListString(): String {
         var tracerListString = ""
-        for (t in traceableList){
+        for (t in traceableList) {
             tracerListString += "name: ${t.name}\n" +
                     "material: ${t.material}\n" +
                     "amount: ${t.amount}\n" +

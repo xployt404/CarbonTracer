@@ -41,19 +41,23 @@ import java.time.Instant
 
 class ChatFragment : Fragment() {
     private val model = GeminiModel()
-    private lateinit var typingIndicatorLayout : CardView
-    private var chatHistoryList : MutableList<ChatMessage> = mutableListOf()
+    private lateinit var typingIndicatorLayout: CardView
+    private var chatHistoryList: MutableList<ChatMessage> = mutableListOf()
     private lateinit var chatHistory: ChatHistory
     private lateinit var viewModel: SharedViewModel
     private var chatAdapter = ChatAdapter(this.chatHistoryList)
     private lateinit var recyclerView: RecyclerView
-    private lateinit var recorder : AudioRecorder
-    private lateinit var chatDbList : MutableList<ChatMessage>
+    private lateinit var recorder: AudioRecorder
+    private lateinit var chatDbList: MutableList<ChatMessage>
     private lateinit var glowView: View
     private lateinit var sendButton: ImageButton
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val chatFragmentView = inflater.inflate(R.layout.chat_fragment, container, false)
         val messageTextEdit = chatFragmentView.findViewById<EditText>(R.id.messageEditText)
         recyclerView = chatFragmentView.findViewById(R.id.chatHistory)
@@ -71,25 +75,33 @@ class ChatFragment : Fragment() {
                             model.Tracer().evaluateFootprint(requireContext(), data),
                             isGemini = true
                         )
-                        withContext(Dispatchers.Main){
+                        withContext(Dispatchers.Main) {
                             stopTypingAnimation()
                         }
                     }
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         scrollToBottom()
                         startTypingAnimation()
                         (activity as MainActivity).viewPager.currentItem = 0
                     }
-                }catch (e: UnknownException){
+                } catch (e: UnknownException) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "Unable to reach Gemini >_<", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Unable to reach Gemini >_<",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }catch (e : Exception){
-                    withContext(Dispatchers.Main){
-                        Toast.makeText(requireContext(), "Response from the AI was inconclusive >_<", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Response from the AI was inconclusive >_<",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }finally {
-                    withContext(Dispatchers.Main){
+                } finally {
+                    withContext(Dispatchers.Main) {
                         stopTypingAnimation()
                     }
                 }
@@ -121,9 +133,11 @@ class ChatFragment : Fragment() {
                 val containsLetter = input.any { it.isLetter() }
 
                 if (containsLetter) {
-                    chatFragmentView.findViewById<ImageButton>(R.id.sendButton).setImageResource(R.drawable.ic_send)
+                    chatFragmentView.findViewById<ImageButton>(R.id.sendButton)
+                        .setImageResource(R.drawable.ic_send)
                 } else {
-                    chatFragmentView.findViewById<ImageButton>(R.id.sendButton).setImageResource(R.drawable.ic_mic)
+                    chatFragmentView.findViewById<ImageButton>(R.id.sendButton)
+                        .setImageResource(R.drawable.ic_mic)
                 }
             }
         })
@@ -135,47 +149,51 @@ class ChatFragment : Fragment() {
                 MotionEvent.ACTION_DOWN -> {
                     Log.i(TAG, "ACTION DOWN")
                     try {
-                        if (messageTextEdit.text.isEmpty() && !model.generating){
+                        if (messageTextEdit.text.isEmpty() && !model.generating) {
                             startPulsatingGlow()
                             recorder.startRecording(requireContext(), lifecycleScope)
-                        }else{
+                        } else {
                             v.performClick()
                         }
-                    }catch (e: Exception){
+                    } catch (e: Exception) {
                         Log.e(TAG, e.message.toString())
                     }
                     true
                 }
+
                 MotionEvent.ACTION_UP -> {
                     Log.d(TAG, "Action Up")
-                    if (recorder.isRecording){
+                    if (recorder.isRecording) {
                         Log.d(TAG, "Stopping Recording")
                         scrollToBottom()
                         stopPulsatingGlow()
                         recorder.stopRecording()
-                        if (!model.generating){
+                        if (!model.generating) {
                             sendAudio()
                         }
                         recorder.isRecording = false
                     }
                     true
                 }
+
                 MotionEvent.ACTION_CANCEL -> {
                     Log.d(TAG, "Action was CANCEL")
                     recorder.stopRecording()
                     stopPulsatingGlow()
                     true
                 }
+
                 MotionEvent.ACTION_OUTSIDE -> {
                     Log.d(TAG, "Movement occurred outside bounds of current screen element")
                     true
                 }
+
                 else -> false
             }
 
         }
         sendButton.setOnClickListener {
-            if (!model.generating and messageTextEdit.text.isNotEmpty()){
+            if (!model.generating and messageTextEdit.text.isNotEmpty()) {
                 sendText(messageTextEdit.text.toString())
                 messageTextEdit.text = null
             }
@@ -189,22 +207,23 @@ class ChatFragment : Fragment() {
         lifecycleScope.launch {
             startTypingAnimation()
             try {
-                model.File().sendFile(requireContext(),
-                        File(
-                            requireContext().filesDir, "recording.ogg"
-                        ).toUri(),
-                        chatHistory
-                    )
-            }catch (e : Exception){
+                model.File().sendFile(
+                    requireContext(),
+                    File(
+                        requireContext().filesDir, "recording.ogg"
+                    ).toUri(),
+                    chatHistory
+                )
+            } catch (e: Exception) {
                 addMessage("ERROR: ".plus(e.message.toString()), true)
-            }finally {
+            } finally {
                 stopTypingAnimation()
             }
             updateChatHistory()
         }
     }
 
-    private fun addMessage(msg : String, isGemini : Boolean){
+    private fun addMessage(msg: String, isGemini: Boolean) {
         Log.d("MESSAGE", "adding message: $msg")
         lifecycleScope.launch {
             chatHistory.insertChatMessage(
@@ -216,8 +235,8 @@ class ChatFragment : Fragment() {
         }
     }
 
-    private fun scrollToBottom(){
-        recyclerView.post {recyclerView.scrollToPosition(recyclerView.adapter?.itemCount?.minus(1)!!)}
+    private fun scrollToBottom() {
+        recyclerView.post { recyclerView.scrollToPosition(recyclerView.adapter?.itemCount?.minus(1)!!) }
     }
 
     private fun startTypingAnimation() {
@@ -254,25 +273,25 @@ class ChatFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        if (model.generating){
+        if (model.generating) {
             startTypingAnimation()
-        }else{
+        } else {
             stopTypingAnimation()
         }
-        lifecycleScope.launch{
+        lifecycleScope.launch {
             updateChatHistory()
         }
 
     }
 
-    private suspend fun updateChatHistory(){
+    private suspend fun updateChatHistory() {
 
         chatHistoryList.lastIndex
         chatDbList = chatHistory.readChatHistory()
         chatHistoryList.clear()
         Log.i(TAG, chatHistoryList.count().toString())
         chatHistoryList.addAll(chatDbList)
-        withContext(Dispatchers.Main){
+        withContext(Dispatchers.Main) {
             chatAdapter.notifyItemInserted(chatHistoryList.lastIndex)
             scrollToBottom()
         }
@@ -285,7 +304,7 @@ class ChatFragment : Fragment() {
         scrollToBottom()
 
         // Launch a coroutine to handle the network call
-       lifecycleScope.launch {
+        lifecycleScope.launch {
             lateinit var response: String
             try {
                 // Switch to IO context for the network call
@@ -301,10 +320,12 @@ class ChatFragment : Fragment() {
             }
         }
     }
-    private fun stopTypingAnimation(){
+
+    private fun stopTypingAnimation() {
         typingIndicatorLayout.visibility = View.GONE
     }
-    companion object{
+
+    companion object {
         private const val TAG = "ChatFragment"
         private val REQUIRED_PERMISSIONS = arrayOf(RECORD_AUDIO, INTERNET, CAMERA)
     }
@@ -319,6 +340,7 @@ class ChatFragment : Fragment() {
         recorder.stopRecording()
         model.generating = false
     }
+
     private fun startPulsatingGlow() {
         glowView.visibility = View.VISIBLE
         val scaleX = ObjectAnimator.ofFloat(glowView, "scaleX", 1f, 1.6f, 1f)

@@ -22,12 +22,16 @@ import java.time.Instant
 class GeminiModel {
     var chatHistoryString = ""
     var generating = false
-    companion object{
+
+    companion object {
         private const val TAG = "GeminiModel"
     }
 
 
-    inner class Chat(private val context: Context, private val modelName: String = "gemini-1.5-pro") {
+    inner class Chat(
+        private val context: Context,
+        private val modelName: String = "gemini-1.5-pro"
+    ) {
         private lateinit var model: GenerativeModel
         private var apiKey: String = ""
 
@@ -78,16 +82,16 @@ class GeminiModel {
     }
 
     inner class File {
-        suspend fun sendFile(context : Context, fileUri: Uri, chatHistory: ChatHistory? = null){
-            withContext(Dispatchers.IO){
+        suspend fun sendFile(context: Context, fileUri: Uri, chatHistory: ChatHistory? = null) {
+            withContext(Dispatchers.IO) {
                 generating = true
                 val model = GenerativeModel(
                     "gemini-1.5-pro",
-                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString()
+                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey")
+                        .toString(),
                     // Retrieve API key as an environmental variable defined in a Build Configuration
                     // see https://github.com/google/secrets-gradle-plugin for further instructions
-                    ,
-                    systemInstruction = content{
+                    systemInstruction = content {
                         text(
                             "You are an assistant that assists in making more eco-friendly choices. " +
                                     "Your purpose is to answer questions regarding ecological sustainability. " +
@@ -95,7 +99,7 @@ class GeminiModel {
                                     "Your response contains the spoken words you heard in the audio file and your answer to the request stated in the audio." +
                                     "You can give explanations to the user about the mentioned subject or matter too if the option presents. " +
                                     "If a request by the user is not even indirectly related to environmental sustainability tell the user. " +
-                                    "You can Answer to short greetings etc."+
+                                    "You can Answer to short greetings etc." +
                                     "If you are unable to make out coherent sentences tell the user."
                         )
                     },
@@ -121,18 +125,26 @@ class GeminiModel {
                             "audio/ogg", File(fileUri.path!!).readBytes()
                         )
                         text("Listen to the request then respond. ")
-                        text("output: " +
-                                "spoken_words: \n" +
-                                "answer: ")
+                        text(
+                            "output: " +
+                                    "spoken_words: \n" +
+                                    "answer: "
+                        )
                     }
                 )
                 Log.d(TAG, response.text.toString())
 
 
                 // Extracting spoken_words
-                val spokenWords = Regex("spoken_words: (.+?)\\n").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
-                if (spokenWords.isNotEmpty()){
-                    chatHistory?.insertChatMessage(false, spokenWords, Instant.now().toEpochMilli().toString())
+                val spokenWords =
+                    Regex("spoken_words: (.+?)\\n").find(response.text.toString())?.groups?.get(1)?.value?.trim()
+                        ?: ""
+                if (spokenWords.isNotEmpty()) {
+                    chatHistory?.insertChatMessage(
+                        false,
+                        spokenWords,
+                        Instant.now().toEpochMilli().toString()
+                    )
                 }
 
                 chatHistoryString += "input: $spokenWords\n\n"
@@ -142,8 +154,14 @@ class GeminiModel {
                 }
 
                 // Extracting answer
-                val answer =  Regex("answer: (.+)").find(response.text.toString())?.groups?.get(1)?.value?.trim() ?: ""
-                chatHistory?.insertChatMessage(true, answer, Instant.now().toEpochMilli().toString())
+                val answer =
+                    Regex("answer: (.+)").find(response.text.toString())?.groups?.get(1)?.value?.trim()
+                        ?: ""
+                chatHistory?.insertChatMessage(
+                    true,
+                    answer,
+                    Instant.now().toEpochMilli().toString()
+                )
 
                 chatHistoryString += "input: $answer\n\n"
 
@@ -153,13 +171,19 @@ class GeminiModel {
             }
         }
     }
-    inner class Tracer{
-        suspend fun interpretImage(context : Context, images : List<Bitmap>, chatHistory: ChatHistory? = null) : String {
-            return withContext(Dispatchers.IO){
+
+    inner class Tracer {
+        suspend fun interpretImage(
+            context: Context,
+            images: List<Bitmap>,
+            chatHistory: ChatHistory? = null
+        ): String {
+            return withContext(Dispatchers.IO) {
                 generating = true
                 val model = GenerativeModel(
                     "gemini-1.5-flash",
-                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString(),
+                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey")
+                        .toString(),
                     // Retrieve API key as an environmental variable defined in a Build Configuration
                     // see https://github.com/google/secrets-gradle-plugin for further instructions
                     generationConfig = generationConfig {
@@ -190,24 +214,27 @@ class GeminiModel {
                  */
 
                 val content = content {
-                    text("input: " +
-                            "You are given an image containing one or multiple objects. " +
-                            "You are tasked to identify and quantify them as accurate as possible to be later processed by a program." +
-                            "Fill out the given form." +
-                            "Answer in lower case without punctuation." +
-                            "What is the most prominently shown object? " +
-                            "Name this object with single word or a word group as simple and specific as you can." +
-                            "Next try to determine the main material this object is made of." +
-                            "Next approximate the amount of the object." +
-                            "Prefer to approximate the amount in a unit (metric)." +
-                            "If you are unable to approximate it in a metric unit just quantify how much of that object is there and leave the unit blank."
+                    text(
+                        "input: " +
+                                "You are given an image containing one or multiple objects. " +
+                                "You are tasked to identify and quantify them as accurate as possible to be later processed by a program." +
+                                "Fill out the given form." +
+                                "Answer in lower case without punctuation." +
+                                "What is the most prominently shown object? " +
+                                "Name this object with single word or a word group as simple and specific as you can." +
+                                "Next try to determine the main material this object is made of." +
+                                "Next approximate the amount of the object." +
+                                "Prefer to approximate the amount in a unit (metric)." +
+                                "If you are unable to approximate it in a metric unit just quantify how much of that object is there and leave the unit blank."
                     )
 
                     image(images[0])
-                    text("output: " )
-                    text("objectName: \n" +
-                            "material: \n" + "amount: \n" +
-                            "unit: \n")
+                    text("output: ")
+                    text(
+                        "objectName: \n" +
+                                "material: \n" + "amount: \n" +
+                                "unit: \n"
+                    )
                 }
                 val response = model.generateContent(
                     content
@@ -215,8 +242,10 @@ class GeminiModel {
 
 
                 // Get the first text part of the first candidate
-                chatHistory?.insertChatMessage(true,
-                    response.text.toString(), Instant.now().toEpochMilli().toString())
+                chatHistory?.insertChatMessage(
+                    true,
+                    response.text.toString(), Instant.now().toEpochMilli().toString()
+                )
                 generating = false
 
 
@@ -224,24 +253,29 @@ class GeminiModel {
             }
         }
 
-        suspend fun generateCo2e(context: Context, traceable: Traceable, fullResponse : Boolean = false): List<String?> {
-            return withContext(Dispatchers.IO){
+        suspend fun generateCo2e(
+            context: Context,
+            traceable: Traceable,
+            fullResponse: Boolean = false
+        ): List<String?> {
+            return withContext(Dispatchers.IO) {
                 generating = true
                 val model = GenerativeModel(
                     "gemini-1.5-pro",
-                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString() // Retrieve API key
-
-                    , systemInstruction = content {
-                        text("You are an AI that assists in making more eco-friendly choices." +
-                                "Assume the of CO2 emitted by certain objects based on your available data."  +
-                                "The name is the name of the object to be evaluated." +
-                                "The amount represents, in what capacity that object is used. " +
-                                "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
-                                "The occurrence represents the frequency of usage." +
-                                "Your task is to calculate the produced CO2e yearly for the occurrence time frame given by the user." +
-                                "If the object is a washing machine for instance, the electricity usage is relevant and not the manufacturing and transport emissions." +
-                                "For products that are disposed after usage and have to be bought frequently its the other way around of course." +
-                                "In the last line of your response only write the amount of CO2 you assumed plus the unit of mass but nothing more."
+                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey")
+                        .toString(), // Retrieve API key
+                    systemInstruction = content {
+                        text(
+                            "You are an AI that assists in making more eco-friendly choices." +
+                                    "Assume the of CO2 emitted by certain objects based on your available data." +
+                                    "The name is the name of the object to be evaluated." +
+                                    "The amount represents, in what capacity that object is used. " +
+                                    "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
+                                    "The occurrence represents the frequency of usage." +
+                                    "Your task is to calculate the produced CO2e yearly for the occurrence time frame given by the user." +
+                                    "If the object is a washing machine for instance, the electricity usage is relevant and not the manufacturing and transport emissions." +
+                                    "For products that are disposed after usage and have to be bought frequently its the other way around of course." +
+                                    "In the last line of your response only write the amount of CO2 you assumed plus the unit of mass but nothing more."
                         )
                     },
                     generationConfig = generationConfig {
@@ -260,13 +294,15 @@ class GeminiModel {
                 println(traceable)
                 val content = content {
                     text("input: ")
-                    text("name: ${traceable.name}\n" +
-                            "material: ${traceable.material}\n" +
-                            "amount: ${traceable.amount}\n" +
-                            "occurrence: ${traceable.occurrence}")
+                    text(
+                        "name: ${traceable.name}\n" +
+                                "material: ${traceable.material}\n" +
+                                "amount: ${traceable.amount}\n" +
+                                "occurrence: ${traceable.occurrence}"
+                    )
 
 
-                    text("output:" )
+                    text("output:")
                 }
                 val response = model.generateContent(
                     content
@@ -281,7 +317,7 @@ class GeminiModel {
 
                 Log.i("CO2E", splitResponse.toString())
 
-                if (!fullResponse){
+                if (!fullResponse) {
                     listOf(splitResponse.last())
                 } else {
                     listOf(splitResponse.last(), response.text)
@@ -291,25 +327,26 @@ class GeminiModel {
         }
 
         suspend fun evaluateFootprint(context: Context, tracerListString: String): String {
-            return withContext(Dispatchers.IO){
+            return withContext(Dispatchers.IO) {
                 generating = true
                 val model = GenerativeModel(
                     "gemini-1.5-pro",
-                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey").toString() // Retrieve API key
-
-                    , systemInstruction = content {
-                        text("You are an AI that assists in making more eco-friendly choices." +
-                                "The CO2e of multiple objects and activities of a person were evaluated and you are given the list of them." +
-                                "Your Task is to evaluate/comment the Carbon footprint of this person." +
-                                "Give recommendations, how the user could improve his footprint and " +
-                                "go into detail about the objects or activities that you think should be emphasized."  +
-                                "The name is the name of the object/activity to be evaluated." +
-                                "The amount represents, in what capacity that object is used. " +
-                                "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
-                                "The occurrence represents the frequency of usage." +
-                                "The CO2e yearly is the yearly CO2e in kilograms. " +
-                                "You wont make up any values but instead use the already calculated emissions." +
-                                "You can address the user with 'you'"
+                    apiKey = ConfigFile.getJsonAttribute(ConfigFile.read(context), "apiKey")
+                        .toString(), // Retrieve API key
+                    systemInstruction = content {
+                        text(
+                            "You are an AI that assists in making more eco-friendly choices." +
+                                    "The CO2e of multiple objects and activities of a person were evaluated and you are given the list of them." +
+                                    "Your Task is to evaluate/comment the Carbon footprint of this person." +
+                                    "Give recommendations, how the user could improve his footprint and " +
+                                    "go into detail about the objects or activities that you think should be emphasized." +
+                                    "The name is the name of the object/activity to be evaluated." +
+                                    "The amount represents, in what capacity that object is used. " +
+                                    "This can be the number of usages of an object but also the amount of the object in liters, grams etc. for instance." +
+                                    "The occurrence represents the frequency of usage." +
+                                    "The CO2e yearly is the yearly CO2e in kilograms. " +
+                                    "You wont make up any values but instead use the already calculated emissions." +
+                                    "You can address the user with 'you'"
                         )
                     },
                     generationConfig = generationConfig {
@@ -330,7 +367,7 @@ class GeminiModel {
                     text(tracerListString)
 
 
-                    text("output: " )
+                    text("output: ")
                 }
                 val response = model.generateContent(
                     content

@@ -76,13 +76,29 @@ class TraceableList private constructor(context: Context) {
             with(cursor) {
                 while (moveToNext()) {
                     val id = getInt(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_ID))
-                    val objectName = getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME))
-                    val material = getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_MATERIAL))
-                    val amount = getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_AMOUNT))
-                    val occurrence = getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_OCCURRENCE))
-                    val category = getInt(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_CATEGORY))
-                    val co2e = getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_CO2E))
-                    traceables.add(Traceable(id, objectName, material, amount, occurrence, category, co2e))
+                    val objectName =
+                        getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_OBJECT_NAME))
+                    val material =
+                        getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_MATERIAL))
+                    val amount =
+                        getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_AMOUNT))
+                    val occurrence =
+                        getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_OCCURRENCE))
+                    val category =
+                        getInt(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_CATEGORY))
+                    val co2e =
+                        getString(getColumnIndexOrThrow(TracerContract.Traceable.COLUMN_NAME_CO2E))
+                    traceables.add(
+                        Traceable(
+                            id,
+                            objectName,
+                            material,
+                            amount,
+                            occurrence,
+                            category,
+                            co2e
+                        )
+                    )
                 }
             }
             cursor.close()
@@ -101,7 +117,12 @@ class TraceableList private constructor(context: Context) {
                 put(TracerContract.Traceable.COLUMN_NAME_CATEGORY, traceable.category)
                 put(TracerContract.Traceable.COLUMN_NAME_CO2E, traceable.co2e)
             }
-            db.update(TracerContract.Traceable.TABLE_NAME, values, "id = ?", arrayOf(traceable.id.toString()))
+            db.update(
+                TracerContract.Traceable.TABLE_NAME,
+                values,
+                "id = ?",
+                arrayOf(traceable.id.toString())
+            )
         }
     }
 }

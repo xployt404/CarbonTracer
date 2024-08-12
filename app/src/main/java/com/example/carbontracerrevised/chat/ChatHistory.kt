@@ -5,7 +5,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ChatHistory (context: Context){
+class ChatHistory(context: Context) {
     private val dbHelper = ChatHistoryDbHelper(context)
 
 
@@ -21,6 +21,7 @@ class ChatHistory (context: Context){
             db.insert(ChatHistoryContract.ChatEntry.TABLE_NAME, null, values)
         }
     }
+
     suspend fun readChatHistory(): MutableList<ChatMessage> {
         return withContext(Dispatchers.IO) {
             val db = dbHelper.readableDatabase
@@ -63,12 +64,11 @@ class ChatHistory (context: Context){
 
     suspend fun clearChartHistory() {
         return withContext(Dispatchers.IO) {
-        val db = dbHelper.writableDatabase
-        db.delete(ChatHistoryContract.ChatEntry.TABLE_NAME, null, null)
-        db.close()
+            val db = dbHelper.writableDatabase
+            db.delete(ChatHistoryContract.ChatEntry.TABLE_NAME, null, null)
+            db.close()
         }
     }
-
 
 
 }
