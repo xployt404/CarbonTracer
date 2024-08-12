@@ -14,7 +14,7 @@ class OnboardingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_onboarding)
 
         viewPager = findViewById(R.id.onboarding_pager)
-        val fragments = listOf(WelcomeFragment(), TutorialFragment(), ApiKeyFragment())
+        val fragments = listOf(WelcomeFragment(), ApiKeyFragment())
         val adapter = ViewPagerAdapter(this, fragments)
         viewPager.adapter = adapter
     }

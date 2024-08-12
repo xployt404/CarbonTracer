@@ -207,13 +207,15 @@ class ChatFragment : Fragment() {
         lifecycleScope.launch {
             startTypingAnimation()
             try {
-                model.File().sendFile(
-                    requireContext(),
-                    File(
-                        requireContext().filesDir, "recording.ogg"
-                    ).toUri(),
-                    chatHistory
-                )
+                withContext(Dispatchers.IO){
+                    model.File().sendFile(
+                        requireContext(),
+                        File(
+                            requireContext().filesDir, "recording.ogg"
+                        ).toUri(),
+                        chatHistory
+                    )
+                }
             } catch (e: Exception) {
                 addMessage("ERROR: ".plus(e.message.toString()), true)
             } finally {

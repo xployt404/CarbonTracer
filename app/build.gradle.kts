@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.carbontracerrevised"
+        applicationId = "com.example.carbontracer"
         minSdk = 31
         targetSdk = 34
         versionCode = 1

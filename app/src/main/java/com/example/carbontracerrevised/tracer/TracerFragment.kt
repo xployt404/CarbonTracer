@@ -2,6 +2,7 @@ package com.example.carbontracerrevised.tracer
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.carbontracerrevised.ConfigFile
+import com.example.carbontracerrevised.HelpActivity
 import com.example.carbontracerrevised.MainActivity
 import com.example.carbontracerrevised.R
 import com.example.carbontracerrevised.SharedViewModel
@@ -107,7 +109,7 @@ class TracerFragment : Fragment() {
             when (menuItem.itemId) {
                 //TODO: implement all
                 R.id.menu_item_help -> {
-
+                    startHelpActivity()
                 }
 
                 R.id.menu_item_footprint -> {
@@ -193,6 +195,12 @@ class TracerFragment : Fragment() {
         return tracerFragment
     }
 
+    private fun startHelpActivity() {
+        val intent = Intent(requireContext(), HelpActivity::class.java)
+        startActivity(intent)
+    }
+
+
     private fun selectAllTraceables() {
         traceableAdapter.selectedItems.clear()
         traceableAdapter.selectedItems.addAll(traceableAdapter.traceableList)
@@ -200,7 +208,7 @@ class TracerFragment : Fragment() {
             val view: View? = recyclerView.getChildAt(i)
 
             view?.foreground =
-                ContextCompat.getDrawable(requireContext(), R.drawable.traceable_selected)
+                ContextCompat.getDrawable(requireContext(), com.example.carbontracerrevised.R.drawable.traceable_selected)
         }
         traceableAdapter.toggleSelectMode()
     }

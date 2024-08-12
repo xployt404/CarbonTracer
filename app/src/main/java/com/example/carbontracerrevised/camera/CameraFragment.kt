@@ -37,8 +37,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.carbontracerrevised.GeminiModel
 import com.example.carbontracerrevised.MainActivity
-import com.example.carbontracerrevised.R
 import com.example.carbontracerrevised.tracer.Traceable
+import com.example.carbontracerrevised.R
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

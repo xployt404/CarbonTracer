@@ -28,6 +28,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".onboardingscreen.OnboardingActivity"/>
+        <activity android:name=".HelpActivity" />
     </application>
 
 </manifest>

@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CarbonTracerRevised"
+rootProject.name = "Carbon Tracer"
 include(":app")
  
